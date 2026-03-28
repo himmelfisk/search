@@ -1,0 +1,35 @@
+{
+  "name": "search",
+  "version": "1.0.0",
+  "description": "This app is used for coordinating search operations. It supports **Android**, **iOS**, and **Web** platforms.",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --format=esm --outfile=www/js/app.js",
+    "sync": "npm run build && cap sync",
+    "sync:android": "npm run build && cap sync android",
+    "sync:ios": "npm run build && cap sync ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/himmelfisk/search.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/himmelfisk/search/issues"
+  },
+  "homepage": "https://github.com/himmelfisk/search#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/geolocation": "^8.1.0",
+    "@capacitor/ios": "^8.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.4"
+  }
+}
