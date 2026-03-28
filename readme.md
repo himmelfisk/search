@@ -17,6 +17,18 @@ Built with [Capacitor](https://capacitorjs.com/) — a single web codebase that 
 - **Android Studio** (for Android builds)
 - **Xcode** (for iOS builds, macOS only)
 
+#### Android SDK Setup
+
+Android builds require the `ANDROID_HOME` environment variable to point to your Android SDK directory. Without it, Gradle will fail with *"SDK location not found"*.
+
+| OS | Typical SDK path | How to set |
+|---|---|---|
+| **Windows** | `C:\Users\<you>\AppData\Local\Android\Sdk` | `setx ANDROID_HOME "%LOCALAPPDATA%\Android\Sdk"` |
+| **macOS** | `~/Library/Android/sdk` | Add `export ANDROID_HOME="$HOME/Library/Android/sdk"` to `~/.zshrc` |
+| **Linux** | `~/Android/Sdk` | Add `export ANDROID_HOME="$HOME/Android/Sdk"` to `~/.bashrc` |
+
+> **Tip:** If you installed Android Studio with default settings, the SDK path above should be correct. You can verify it in Android Studio under **Settings → Languages & Frameworks → Android SDK → Android SDK Location**.
+
 ### Install Dependencies
 
 ```bash
@@ -142,6 +154,8 @@ All listed features are **feasible to implement** with current technologies. The
 
 ## How to Build a .apk for Testing on a Real Device
 
+### Option A — Using Android Studio
+
 1. Build the web app and sync to the Android project:
 
    ```bash
@@ -157,5 +171,25 @@ All listed features are **feasible to implement** with current technologies. The
 3. In Android Studio, go to **Build → Build Bundle(s) / APK(s) → Build APK(s)**.
 4. Once the build completes, click the **locate** link in the notification to find the generated APK (typically at `android/app/build/outputs/apk/debug/app-debug.apk`).
 5. Transfer the APK to your Android device (via USB, email, or a file-sharing service) and install it.
+
+### Option B — Using the command line
+
+> **Requires** the `ANDROID_HOME` environment variable to be set (see [Android SDK Setup](#android-sdk-setup) above).
+
+1. Build the web app and sync to the Android project:
+
+   ```bash
+   npm run sync:android
+   ```
+
+2. Build the debug APK with Gradle:
+
+   ```bash
+   cd android
+   ./gradlew assembleDebug
+   ```
+
+3. The APK is generated at `android/app/build/outputs/apk/debug/app-debug.apk`.
+4. Transfer it to your device and install it.
 
 > **Note:** On the device you may need to enable **Install from unknown sources** in Settings before installing the APK.
