@@ -54,6 +54,6 @@ The recommended approach is to generate a **random UUID on first install** and p
 
 All listed features are **feasible to implement** with current technologies. The main areas that require extra attention are:
 
-1. **Background GPS on mobile** — both Android and iOS impose restrictions on background location access. Proper permissions, battery optimisation handling, and user consent flows are required.
+1. **Background GPS on mobile** — both Android and iOS impose restrictions on background location access. Proper permissions, battery optimization handling, and user consent flows are required.
 2. **Offline GPS queuing** — a reliable local storage and sync mechanism is needed so no location data is lost when the device is offline.
 3. **Privacy & consent** — continuous location tracking and device identification must comply with platform guidelines (Google Play, App Store) and regulations (GDPR, etc.). Users must give explicit consent.
