@@ -117,3 +117,45 @@ All listed features are **feasible to implement** with current technologies. The
 1. **Background GPS on mobile** — both Android and iOS impose restrictions on background location access. Proper permissions, battery optimization handling, and user consent flows are required.
 2. **Offline GPS queuing** — a reliable local storage and sync mechanism is needed so no location data is lost when the device is offline.
 3. **Privacy & consent** — continuous location tracking and device identification must comply with platform guidelines (Google Play, App Store) and regulations (GDPR, etc.). Users must give explicit consent.
+
+---
+
+## How to Build for Testing in Android Studio
+
+1. Build the web app and sync to the Android project:
+
+   ```bash
+   npm run sync:android
+   ```
+
+2. Open the project in Android Studio:
+
+   ```bash
+   npm run open:android
+   ```
+
+3. In Android Studio, wait for Gradle sync to finish.
+4. Select a virtual device (emulator) from the device dropdown in the toolbar.
+5. Click **Run ▶** (or press **Shift + F10**) to build and launch the app on the emulator.
+
+---
+
+## How to Build a .apk for Testing on a Real Device
+
+1. Build the web app and sync to the Android project:
+
+   ```bash
+   npm run sync:android
+   ```
+
+2. Open the project in Android Studio:
+
+   ```bash
+   npm run open:android
+   ```
+
+3. In Android Studio, go to **Build → Build Bundle(s) / APK(s) → Build APK(s)**.
+4. Once the build completes, click the **locate** link in the notification to find the generated APK (typically at `android/app/build/outputs/apk/debug/app-debug.apk`).
+5. Transfer the APK to your Android device (via USB, email, or a file-sharing service) and install it.
+
+> **Note:** On the device you may need to enable **Install from unknown sources** in Settings before installing the APK.
