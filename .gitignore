@@ -1,0 +1,21 @@
+node_modules/
+.DS_Store
+*.log
+
+# Build output
+www/js/app.js
+
+# Capacitor native build artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/local.properties
+ios/App/Pods/
+ios/DerivedData/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

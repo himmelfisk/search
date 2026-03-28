@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Search Operations</string>
+    <string name="title_activity_main">Search Operations</string>
+    <string name="package_name">com.himmelfisk.search</string>
+    <string name="custom_url_scheme">com.himmelfisk.search</string>
+</resources>
