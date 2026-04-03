@@ -1,0 +1,9 @@
+name = "search-api"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "search-db"
+database_id = "DATABASE_ID_HERE"
+migrations_dir = "migrations"
