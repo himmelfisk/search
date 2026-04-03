@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 import L from "leaflet";
+import { t, getLang, setLang, getAvailableLanguages } from "./i18n.js";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -75,6 +76,140 @@ const views = {
 };
 
 // ---------------------------------------------------------------------------
+// Language selector
+// ---------------------------------------------------------------------------
+function buildLanguageSelector() {
+  const container = document.getElementById("lang-selector");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const current = getLang();
+  const languages = getAvailableLanguages();
+
+  const btn = document.createElement("button");
+  btn.className = "lang-btn";
+  btn.setAttribute("aria-label", "Language");
+  btn.textContent = (languages.find((l) => l.code === current)?.name ?? current).slice(0, 3).toUpperCase();
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "lang-dropdown hidden";
+
+  languages.forEach((lang) => {
+    const item = document.createElement("button");
+    item.className = "lang-option" + (lang.code === current ? " active" : "");
+    item.textContent = lang.name;
+    item.addEventListener("click", () => {
+      setLang(lang.code);
+      applyTranslations();
+      buildLanguageSelector();
+      dropdown.classList.add("hidden");
+    });
+    dropdown.appendChild(item);
+  });
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("hidden");
+  });
+
+  // Close dropdown when clicking elsewhere
+  document.addEventListener("click", () => dropdown.classList.add("hidden"));
+
+  container.appendChild(btn);
+  container.appendChild(dropdown);
+}
+
+// ---------------------------------------------------------------------------
+// Apply translations to static DOM elements
+// ---------------------------------------------------------------------------
+function applyTranslations() {
+  // Update html lang attribute
+  document.documentElement.lang = getLang();
+
+  // Page title
+  document.title = t("appTitle");
+
+  // Header title (only when on home view)
+  if (currentView === "home") {
+    headerTitle.textContent = t("appTitle");
+  }
+
+  // Auth buttons
+  document.getElementById("google-signin-btn").textContent = t("signIn");
+  document.getElementById("sign-out-btn").textContent = t("signOut");
+
+  // Header action buttons
+  const mySearchesBtn = document.getElementById("my-searches-btn");
+  if (mySearchesBtn) mySearchesBtn.textContent = t("mySearches");
+  const createSearchBtn = document.getElementById("create-search-btn");
+  if (createSearchBtn) createSearchBtn.textContent = t("newSearch");
+
+  // Home view empty state
+  const emptyP = document.querySelectorAll("#search-list-empty p");
+  if (emptyP.length >= 1) emptyP[0].textContent = t("noActiveSearches");
+  if (emptyP.length >= 2) emptyP[1].textContent = t("pullToRefresh");
+
+  // Join section
+  const joinTitle = document.querySelector("#join-section .section-title");
+  if (joinTitle) joinTitle.textContent = t("joinThisSearch");
+  const joinDesc = document.querySelector("#join-section .text-muted-sm");
+  if (joinDesc) joinDesc.textContent = t("joinDescription");
+  const nameLabel = document.querySelector('label[for="join-name"]');
+  if (nameLabel) nameLabel.textContent = t("name");
+  const nameInput = document.getElementById("join-name");
+  if (nameInput) nameInput.placeholder = t("namePlaceholder");
+  const phoneLabel = document.querySelector('label[for="join-phone"]');
+  if (phoneLabel) phoneLabel.textContent = t("phoneNumber");
+  const phoneInput = document.getElementById("join-phone");
+  if (phoneInput) phoneInput.placeholder = t("phonePlaceholder");
+  const joinBtn = document.getElementById("join-btn");
+  if (joinBtn && !joinBtn.disabled) joinBtn.textContent = t("joinSearch");
+
+  // Tracking section
+  const trackingLabels = document.querySelectorAll("#tracking-section .coord-card .label");
+  if (trackingLabels.length >= 4) {
+    trackingLabels[0].textContent = t("latitude");
+    trackingLabels[1].textContent = t("longitude");
+    trackingLabels[2].textContent = t("accuracy");
+    trackingLabels[3].textContent = t("lastUpdate");
+  }
+  const leaveBtn = document.getElementById("leave-btn");
+  if (leaveBtn) leaveBtn.textContent = t("leaveSearch");
+
+  // Participants section title in search view
+  const searchParticipantsTitle = document.querySelector("#view-search > .section-title");
+  if (searchParticipantsTitle) searchParticipantsTitle.textContent = t("participants");
+
+  // Dashboard stat labels
+  const statLabels = document.querySelectorAll("#dashboard-stats .stat-label");
+  if (statLabels.length >= 3) {
+    statLabels[0].textContent = t("statParticipants");
+    statLabels[1].textContent = t("distanceCovered");
+    statLabels[2].textContent = t("gpsPoints");
+  }
+  const teamMembersTitle = document.querySelector("#view-dashboard > .section-title");
+  if (teamMembersTitle) teamMembersTitle.textContent = t("teamMembers");
+  const switcherLabel = document.querySelector(".dashboard-switcher-label");
+  if (switcherLabel) switcherLabel.textContent = t("switchSearch");
+
+  // Create search modal
+  const modalTitle = document.querySelector("#create-search-modal .modal-title");
+  if (modalTitle) modalTitle.textContent = t("newSearchOperation");
+  const titleLabel = document.querySelector('label[for="create-title"]');
+  if (titleLabel) titleLabel.textContent = t("title");
+  const titleInput = document.getElementById("create-title");
+  if (titleInput) titleInput.placeholder = t("titlePlaceholder");
+  const descLabel = document.querySelector('label[for="create-description"]');
+  if (descLabel) descLabel.textContent = t("descriptionOptional");
+  const descInput = document.getElementById("create-description");
+  if (descInput) descInput.placeholder = t("descriptionPlaceholder");
+  const cancelBtn = document.getElementById("create-cancel-btn");
+  if (cancelBtn) cancelBtn.textContent = t("cancel");
+  const submitBtn = document.getElementById("create-submit-btn");
+  if (submitBtn && !submitBtn.disabled) submitBtn.textContent = t("create");
+}
+
+// ---------------------------------------------------------------------------
 // Offline GPS queue
 // ---------------------------------------------------------------------------
 const GPS_QUEUE_KEY = "gps_queue";
@@ -125,7 +260,7 @@ function updateQueueUI() {
   if (!indicator || !countEl) return;
   if (queue.length > 0) {
     indicator.classList.remove("hidden");
-    countEl.textContent = `${queue.length} point${queue.length !== 1 ? "s" : ""} queued offline`;
+    countEl.textContent = t("pointsQueuedOffline", queue.length);
   } else {
     indicator.classList.add("hidden");
   }
@@ -346,7 +481,7 @@ function showView(name) {
   currentView = name;
 
   if (name === "home") {
-    headerTitle.textContent = "Search Operations";
+    headerTitle.textContent = t("appTitle");
     headerBack.classList.add("hidden");
     stopDashboardRefresh();
   } else if (name === "dashboard") {
@@ -433,7 +568,7 @@ async function loadSearches() {
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span class="card-title">${escapeHtml(search.title)}</span>
           <span style="display:flex;align-items:center;gap:0.35rem;">
-            ${isOwned ? '<span class="badge badge-owner">Owner</span>' : ""}
+            ${isOwned ? `<span class="badge badge-owner">${escapeHtml(t("owner"))}</span>` : ""}
             <span class="badge badge-${search.status === "active" ? "active" : "closed"}">${escapeHtml(search.status)}</span>
           </span>
         </div>
@@ -451,7 +586,7 @@ async function loadSearches() {
     });
   } catch (err) {
     loadingEl.classList.add("hidden");
-    listEl.innerHTML = `<div class="status-bar error">Unable to load searches. Check your connection.</div>`;
+    listEl.innerHTML = `<div class="status-bar error">${escapeHtml(t("unableToLoadSearches"))}</div>`;
   }
 }
 
@@ -460,7 +595,7 @@ async function loadSearches() {
 // ---------------------------------------------------------------------------
 async function openSearch(searchId) {
   showView("search");
-  headerTitle.textContent = "Loading…";
+  headerTitle.textContent = t("loading");
 
   const joinSection = document.getElementById("join-section");
   const trackingSection = document.getElementById("tracking-section");
@@ -478,7 +613,7 @@ async function openSearch(searchId) {
     headerTitle.textContent = escapeHtml(data.search.title);
     document.getElementById("search-title").textContent = data.search.title;
     document.getElementById("search-meta").textContent =
-      `Created ${formatDate(data.search.created_at)}`;
+      `${t("created")} ${formatDate(data.search.created_at)}`;
     document.getElementById("search-description").textContent =
       data.search.description || "";
 
@@ -493,9 +628,9 @@ async function openSearch(searchId) {
       startTracking(searchId);
     }
   } catch (err) {
-    headerTitle.textContent = "Error";
+    headerTitle.textContent = t("error");
     document.getElementById("search-title").textContent =
-      "Failed to load search";
+      t("failedToLoadSearch");
   }
 }
 
@@ -505,12 +640,12 @@ function renderParticipants(participants) {
 
   if (participants.length === 0) {
     list.innerHTML =
-      '<li class="text-muted-sm" style="padding:0.5rem 0;">No participants yet. Be the first to join!</li>';
+      `<li class="text-muted-sm" style="padding:0.5rem 0;">${escapeHtml(t("noParticipantsJoin"))}</li>`;
     return;
   }
 
   participants.forEach((p) => {
-    const name = p.name || "Anonymous";
+    const name = p.name || t("anonymous");
     const initial = name.charAt(0).toUpperCase();
     const li = document.createElement("li");
     li.className = "participant-item";
@@ -518,7 +653,7 @@ function renderParticipants(participants) {
       <div class="participant-avatar">${escapeHtml(initial)}</div>
       <div class="participant-info">
         <div class="participant-name">${escapeHtml(name)}</div>
-        <div class="participant-meta">Joined ${formatDate(p.joined_at)}</div>
+        <div class="participant-meta">${t("joined")} ${formatDate(p.joined_at)}</div>
       </div>
     `;
     list.appendChild(li);
@@ -536,7 +671,7 @@ document.getElementById("join-btn").addEventListener("click", async () => {
   const phone = document.getElementById("join-phone").value.trim();
 
   btn.disabled = true;
-  btn.textContent = "Joining…";
+  btn.textContent = t("joining");
 
   try {
     const result = await apiPost(`/api/searches/${currentSearch.id}/join`, {
@@ -557,8 +692,8 @@ document.getElementById("join-btn").addEventListener("click", async () => {
     renderParticipants(data.participants || []);
   } catch (err) {
     btn.disabled = false;
-    btn.textContent = "Join Search";
-    alert("Failed to join. Please try again.");
+    btn.textContent = t("joinSearch");
+    alert(t("failedToJoin"));
   }
 });
 
@@ -586,7 +721,7 @@ async function startTracking(searchId) {
       if (perm.location === "denied") {
         statusEl.className = "status-bar error";
         statusEl.innerHTML =
-          "GPS permission denied. Enable location in your device settings.";
+          escapeHtml(t("gpsPermissionDeniedDevice"));
         return;
       }
     } else {
@@ -594,14 +729,14 @@ async function startTracking(searchId) {
       if (perm.location === "denied") {
         statusEl.className = "status-bar error";
         statusEl.innerHTML =
-          "GPS permission denied. Enable location in your browser settings.";
+          escapeHtml(t("gpsPermissionDeniedBrowser"));
         return;
       }
     }
 
     statusEl.className = "status-bar tracking";
     statusEl.innerHTML =
-      '<span class="pulse"></span><span>GPS tracking active</span>';
+      `<span class="pulse"></span><span>${escapeHtml(t("gpsTrackingActive"))}</span>`;
 
     // Get initial position
     try {
@@ -619,20 +754,20 @@ async function startTracking(searchId) {
       (position, err) => {
         if (err) {
           statusEl.className = "status-bar error";
-          statusEl.innerHTML = `GPS error: ${err.message}`;
+          statusEl.innerHTML = escapeHtml(t("gpsError", err.message));
           return;
         }
         if (position) {
           statusEl.className = "status-bar tracking";
           statusEl.innerHTML =
-            '<span class="pulse"></span><span>GPS tracking active</span>';
+            `<span class="pulse"></span><span>${escapeHtml(t("gpsTrackingActive"))}</span>`;
           handlePosition(position, searchId);
         }
       }
     );
   } catch (err) {
     statusEl.className = "status-bar error";
-    statusEl.innerHTML = `Unable to access GPS: ${err.message}`;
+    statusEl.innerHTML = escapeHtml(t("unableToAccessGps", err.message));
   }
 }
 
@@ -733,7 +868,7 @@ function updateMySearchesButton() {
 
 async function openDashboard(searchId) {
   showView("dashboard");
-  headerTitle.textContent = "Dashboard";
+  headerTitle.textContent = t("dashboard");
   currentDashboardSearchId = searchId;
 
   // Show switcher if multiple owned searches
@@ -776,7 +911,7 @@ async function loadDashboardData(searchId) {
     const data = await apiGetAuth(`/api/searches/${searchId}/dashboard`);
     renderDashboard(data);
   } catch (err) {
-    document.getElementById("dashboard-title").textContent = "Error loading dashboard";
+    document.getElementById("dashboard-title").textContent = t("errorLoadingDashboard");
     document.getElementById("dashboard-meta").textContent = err.message;
   }
 }
@@ -787,7 +922,7 @@ function renderDashboard(data) {
   headerTitle.textContent = escapeHtml(search.title);
   document.getElementById("dashboard-title").textContent = search.title;
   document.getElementById("dashboard-meta").textContent =
-    `Created ${formatDate(search.created_at)} · Status: ${search.status}`;
+    `${t("created")} ${formatDate(search.created_at)} · ${t("status")}: ${search.status}`;
 
   // Group tracks by device_uuid
   const tracksByDevice = {};
@@ -871,7 +1006,7 @@ function renderDashboardMap(tracksByDevice, participantMap) {
     colorIdx++;
 
     const participant = participantMap[uuid];
-    const name = (participant && participant.name) || "Anonymous";
+    const name = (participant && participant.name) || t("anonymous");
 
     // Draw polyline
     const latlngs = points.map((p) => [p.latitude, p.longitude]);
@@ -892,7 +1027,7 @@ function renderDashboardMap(tracksByDevice, participantMap) {
       fillOpacity: 1,
     }).addTo(dashboardMap);
 
-    marker.bindPopup(`<strong>${escapeHtml(name)}</strong><br/>Last update: ${formatDate(latest.recorded_at)}`);
+    marker.bindPopup(`<strong>${escapeHtml(name)}</strong><br/>${t("lastUpdate")}: ${formatDate(latest.recorded_at)}`);
     dashboardLayers.push(marker);
 
     allBounds.push(...latlngs);
@@ -917,7 +1052,7 @@ function renderDashboardLegend(tracksByDevice, participantMap) {
     colorIdx++;
 
     const participant = participantMap[uuid];
-    const name = (participant && participant.name) || "Anonymous";
+    const name = (participant && participant.name) || t("anonymous");
 
     const item = document.createElement("div");
     item.className = "legend-item";
@@ -932,12 +1067,12 @@ function renderDashboardParticipants(participants, deviceDistances) {
 
   if (participants.length === 0) {
     list.innerHTML =
-      '<li class="text-muted-sm" style="padding:0.5rem 0;">No participants yet.</li>';
+      `<li class="text-muted-sm" style="padding:0.5rem 0;">${escapeHtml(t("noParticipants"))}</li>`;
     return;
   }
 
   participants.forEach((p) => {
-    const name = p.name || "Anonymous";
+    const name = p.name || t("anonymous");
     const initial = name.charAt(0).toUpperCase();
     const dist = deviceDistances[p.device_uuid] || 0;
     const li = document.createElement("li");
@@ -953,7 +1088,7 @@ function renderDashboardParticipants(participants, deviceDistances) {
       <div class="participant-info">
         <div class="participant-name">${escapeHtml(name)}</div>
         ${phoneHtml}
-        <div class="participant-meta">Joined ${formatDate(p.joined_at)} · ${formatDistance(dist)}</div>
+        <div class="participant-meta">${t("joined")} ${formatDate(p.joined_at)} · ${formatDistance(dist)}</div>
       </div>
     `;
     list.appendChild(li);
@@ -1024,13 +1159,13 @@ async function submitCreateSearch() {
   const btn = document.getElementById("create-submit-btn");
 
   if (!title) {
-    errorEl.textContent = "Title is required.";
+    errorEl.textContent = t("titleRequired");
     errorEl.classList.remove("hidden");
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = "Creating…";
+  btn.textContent = t("creating");
   errorEl.classList.add("hidden");
 
   try {
@@ -1050,12 +1185,12 @@ async function submitCreateSearch() {
   } catch (err) {
     errorEl.textContent =
       err.status === 401
-        ? "You must be signed in to create searches."
-        : `Failed to create search: ${err.message}`;
+        ? t("mustBeSignedIn")
+        : t("failedToCreateSearch", err.message);
     errorEl.classList.remove("hidden");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Create";
+    btn.textContent = t("create");
   }
 }
 
@@ -1073,6 +1208,10 @@ document.getElementById("create-search-modal")?.addEventListener("click", (e) =>
 // Initialise
 // ---------------------------------------------------------------------------
 async function init() {
+  // Set up language selector & apply translations
+  buildLanguageSelector();
+  applyTranslations();
+
   // Check if we have an active session from a previous page load
   const session = getActiveSession();
   if (session) {
