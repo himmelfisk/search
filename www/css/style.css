@@ -194,8 +194,13 @@ html, body {
 
 .user-name {
   font-size: 0.8rem;
-  color: var(--text-muted);
-  max-width: 120px;
+  font-weight: 600;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  max-width: 160px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -223,19 +228,25 @@ html, body {
 }
 
 .btn-small {
-  padding: 0.2rem 0.5rem;
-  border: 1px solid var(--border);
+  padding: 0.4rem 0.75rem;
+  border: none;
   border-radius: 6px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.7rem;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
 }
 
 .btn-small:hover {
-  background: var(--surface-hover);
-  color: var(--text);
+  background: var(--accent-dark);
+}
+
+.btn-small:active {
+  opacity: 0.85;
 }
 
 /* ---------- Status ---------- */
