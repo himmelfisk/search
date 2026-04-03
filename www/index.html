@@ -31,6 +31,7 @@
             <button id="sign-out-btn" class="btn-small">Sign out</button>
           </div>
         </div>
+        <button class="btn-header-action hidden" id="my-searches-btn" aria-label="My Searches" title="My Searches">📡 My Searches</button>
         <button class="btn-header-action" id="create-search-btn" aria-label="Start new search" title="Start new search">＋ New search</button>
       </div>
     </header>
@@ -114,6 +115,45 @@
         <div class="divider"></div>
         <p class="section-title">Participants</p>
         <ul class="participant-list" id="participant-list"></ul>
+      </div>
+
+      <!-- View: Owner Dashboard -->
+      <div id="view-dashboard" class="view">
+        <!-- Search switcher (shown when owner has multiple active searches) -->
+        <div id="dashboard-switcher" class="dashboard-switcher hidden">
+          <label for="dashboard-select" class="dashboard-switcher-label">Switch search:</label>
+          <select id="dashboard-select" class="dashboard-select"></select>
+        </div>
+
+        <h2 id="dashboard-title" class="card-title text-lg mb-1"></h2>
+        <div id="dashboard-meta" class="card-meta mb-2"></div>
+
+        <!-- Stats bar -->
+        <div id="dashboard-stats" class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-participants">0</div>
+            <div class="stat-label">Participants</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-distance">0 m</div>
+            <div class="stat-label">Distance covered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-points">0</div>
+            <div class="stat-label">GPS points</div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div id="dashboard-map" class="dashboard-map"></div>
+
+        <!-- Map legend -->
+        <div id="dashboard-legend" class="dashboard-legend"></div>
+
+        <!-- Participants with details -->
+        <div class="divider"></div>
+        <p class="section-title">Team Members</p>
+        <ul class="participant-list" id="dashboard-participant-list"></ul>
       </div>
 
     </main>
