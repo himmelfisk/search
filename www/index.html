@@ -2,33 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1e293b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Search Operations</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Search Operations</h1>
-    <p id="status" class="status">Requesting GPS permission…</p>
+  <div class="app">
+    <!-- Header -->
+    <header class="header" id="header">
+      <button class="header-back hidden" id="header-back" aria-label="Go back"></button>
+      <h1 id="header-title">Search Operations</h1>
+      <div class="header-actions" id="header-actions"></div>
+    </header>
 
-    <div id="coordinates" class="coordinates hidden">
-      <div class="coord-row">
-        <span class="label">Latitude</span>
-        <span id="lat" class="value">—</span>
+    <!-- Main content -->
+    <main class="main">
+
+      <!-- View: Search list (home) -->
+      <div id="view-home" class="view active">
+        <div id="search-list"></div>
+        <div id="search-list-empty" class="empty-state hidden">
+          <div class="icon">🔍</div>
+          <p>No active search operations right now.</p>
+          <p class="mt-1" style="font-size:0.8rem;">Pull down to refresh or check back later.</p>
+        </div>
+        <div id="search-list-loading" class="loading-center">
+          <div class="spinner"></div>
+        </div>
       </div>
-      <div class="coord-row">
-        <span class="label">Longitude</span>
-        <span id="lng" class="value">—</span>
+
+      <!-- View: Search detail / join -->
+      <div id="view-search" class="view">
+        <h2 id="search-title" class="card-title" style="font-size:1.2rem;margin-bottom:0.25rem;"></h2>
+        <div id="search-meta" class="card-meta mb-2"></div>
+        <p id="search-description" class="card-description mb-2"></p>
+
+        <!-- Join form (shown when not yet joined) -->
+        <div id="join-section">
+          <div class="divider"></div>
+          <p class="section-title">Join this search</p>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+            No account needed. Optionally share your name and phone number so the team can reach you.
+          </p>
+          <div class="form-group">
+            <label for="join-name">Name</label>
+            <input type="text" id="join-name" placeholder="Your name (optional)" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="join-phone">Phone number</label>
+            <input type="tel" id="join-phone" placeholder="Phone (optional)" autocomplete="tel" />
+          </div>
+          <button class="btn btn-primary" id="join-btn">Join Search</button>
+        </div>
+
+        <!-- Tracking section (shown after joining) -->
+        <div id="tracking-section" class="hidden">
+          <div class="divider"></div>
+          <div id="tracking-status" class="status-bar tracking">
+            <span class="pulse"></span>
+            <span>GPS tracking active</span>
+          </div>
+
+          <div class="coords-grid">
+            <div class="coord-card">
+              <div class="label">Latitude</div>
+              <div class="value" id="track-lat">—</div>
+            </div>
+            <div class="coord-card">
+              <div class="label">Longitude</div>
+              <div class="value" id="track-lng">—</div>
+            </div>
+            <div class="coord-card">
+              <div class="label">Accuracy</div>
+              <div class="value" id="track-accuracy">—</div>
+            </div>
+            <div class="coord-card">
+              <div class="label">Last update</div>
+              <div class="value" id="track-time">—</div>
+            </div>
+          </div>
+
+          <div id="queue-indicator" class="queue-indicator hidden">
+            <span>⏳</span>
+            <span id="queue-count">0 points queued offline</span>
+          </div>
+
+          <button class="btn btn-danger" id="leave-btn">Leave Search</button>
+        </div>
+
+        <!-- Participants -->
+        <div class="divider"></div>
+        <p class="section-title">Participants</p>
+        <ul class="participant-list" id="participant-list"></ul>
       </div>
-      <div class="coord-row">
-        <span class="label">Accuracy</span>
-        <span id="accuracy" class="value">—</span>
-      </div>
-      <div class="coord-row">
-        <span class="label">Last update</span>
-        <span id="timestamp" class="value">—</span>
-      </div>
-    </div>
+
+    </main>
   </div>
 
   <script type="module" src="js/app.js"></script>
