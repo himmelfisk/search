@@ -1,7 +1,104 @@
 import { Hono } from "hono";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, verifyGoogleToken } from "../middleware/auth.js";
 
 export const searchRoutes = new Hono();
+
+/**
+ * GET /owned - List search operations owned by the authenticated user
+ */
+searchRoutes.get("/owned", async (c) => {
+  // Optional auth – verify token from Authorization header
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ error: "Authorization required" }, 401);
+  }
+
+  const token = authHeader.slice(7);
+  const user = await verifyGoogleToken(token);
+  if (!user) {
+    return c.json({ error: "Invalid or expired token" }, 401);
+  }
+
+  const db = c.env.DB;
+  const status = c.req.query("status"); // optional filter
+
+  let query = "SELECT id, title, description, status, created_at FROM search_operations WHERE owner_google_id = ?";
+  const params = [user.googleId];
+
+  if (status) {
+    query += " AND status = ?";
+    params.push(status);
+  }
+
+  query += " ORDER BY created_at DESC";
+
+  const searches = await db.prepare(query).bind(...params).all();
+
+  return c.json({ searches: searches.results });
+});
+
+/**
+ * GET /:id/dashboard - Dashboard data for search owner
+ * Returns participants (with names/phones), all GPS tracks, and summary stats.
+ */
+searchRoutes.get("/:id/dashboard", async (c) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ error: "Authorization required" }, 401);
+  }
+
+  const token = authHeader.slice(7);
+  const user = await verifyGoogleToken(token);
+  if (!user) {
+    return c.json({ error: "Invalid or expired token" }, 401);
+  }
+
+  const db = c.env.DB;
+  const id = c.req.param("id");
+
+  const search = await db
+    .prepare("SELECT * FROM search_operations WHERE id = ?")
+    .bind(id)
+    .first();
+
+  if (!search) {
+    return c.json({ error: "Search not found" }, 404);
+  }
+
+  if (search.owner_google_id !== user.googleId) {
+    return c.json({ error: "Not the owner of this search" }, 403);
+  }
+
+  const since = c.req.query("since");
+
+  // Participants with full details (name, phone)
+  const participants = await db
+    .prepare(
+      "SELECT id, name, phone, device_uuid, joined_at FROM participants WHERE search_id = ? ORDER BY joined_at ASC"
+    )
+    .bind(id)
+    .all();
+
+  // GPS tracks for all participants
+  let gpsQuery =
+    "SELECT gt.device_uuid, gt.latitude, gt.longitude, gt.accuracy, gt.recorded_at, p.name as participant_name FROM gps_tracks gt LEFT JOIN participants p ON gt.device_uuid = p.device_uuid AND gt.search_id = p.search_id WHERE gt.search_id = ?";
+  const gpsParams = [id];
+
+  if (since) {
+    gpsQuery += " AND gt.recorded_at > ?";
+    gpsParams.push(since);
+  }
+
+  gpsQuery += " ORDER BY gt.recorded_at ASC LIMIT 50000";
+
+  const tracks = await db.prepare(gpsQuery).bind(...gpsParams).all();
+
+  return c.json({
+    search,
+    participants: participants.results,
+    tracks: tracks.results,
+  });
+});
 
 /**
  * POST / - Create a new search operation (any authenticated user)
