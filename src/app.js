@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
 
 const statusEl = document.getElementById("status");
@@ -29,11 +30,28 @@ function updatePosition(position) {
   coordsEl.classList.remove("hidden");
 }
 
+async function checkLocationPermission() {
+  if (Capacitor.isNativePlatform()) {
+    const permStatus = await Geolocation.requestPermissions();
+    return permStatus.location;
+  }
+
+  // On web, requestPermissions() is not supported. Use checkPermissions()
+  // when the Permissions API is available; otherwise let getCurrentPosition()
+  // trigger the browser's own permission prompt.
+  try {
+    const permStatus = await Geolocation.checkPermissions();
+    return permStatus.location;
+  } catch {
+    return "prompt";
+  }
+}
+
 async function startTracking() {
   try {
-    const permStatus = await Geolocation.requestPermissions();
+    const locationState = await checkLocationPermission();
 
-    if (permStatus.location === "denied") {
+    if (locationState === "denied") {
       showError(
         "GPS permission denied. Please enable location access in your device settings."
       );
