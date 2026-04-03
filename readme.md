@@ -337,6 +337,7 @@ Add the following secrets to your GitHub repository (**Settings → Secrets and 
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with **Cloudflare Pages: Edit** permission |
 | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (found on the dashboard overview page) |
+| `WORKER_URL` | Full URL of the Cloudflare Worker API (e.g. `https://search-api.<subdomain>.workers.dev`). Required so the frontend can reach the backend API. |
 
 > **First deploy:** The Cloudflare Pages project `search-dashboard` will be created automatically on the first run. No manual setup in the Cloudflare dashboard is needed.
 

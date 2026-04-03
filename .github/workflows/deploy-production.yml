@@ -21,6 +21,8 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+        env:
+          API_BASE: ${{ secrets.WORKER_URL }}
 
       - name: Create Cloudflare Pages project (if not exists)
         uses: cloudflare/wrangler-action@v3
