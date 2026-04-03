@@ -720,6 +720,29 @@ html, body {
   color: var(--bg);
 }
 
+/* ---------- Header action button ---------- */
+.btn-header-action {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-header-action:hover {
+  background: var(--accent-dark);
+}
+
+.btn-header-action:active {
+  opacity: 0.85;
+}
+
 /* ---------- Modal ---------- */
 .modal-overlay {
   position: fixed;
