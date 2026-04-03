@@ -365,7 +365,7 @@ async function loadSearches() {
 // ---------------------------------------------------------------------------
 async function openSearch(searchId) {
   showView("search");
-  headerTitle.textContent = "Loading\u2026";
+  headerTitle.textContent = "Loading…";
 
   const joinSection = document.getElementById("join-section");
   const trackingSection = document.getElementById("tracking-section");
@@ -441,7 +441,7 @@ document.getElementById("join-btn").addEventListener("click", async () => {
   const phone = document.getElementById("join-phone").value.trim();
 
   btn.disabled = true;
-  btn.textContent = "Joining\u2026";
+  btn.textContent = "Joining…";
 
   try {
     const result = await apiPost(`/api/searches/${currentSearch.id}/join`, {
@@ -549,7 +549,7 @@ function handlePosition(position, searchId) {
   document.getElementById("track-lat").textContent = latitude.toFixed(6);
   document.getElementById("track-lng").textContent = longitude.toFixed(6);
   document.getElementById("track-accuracy").textContent =
-    `\u00B1${Math.round(accuracy)} m`;
+    `±${Math.round(accuracy)} m`;
   document.getElementById("track-time").textContent = time.toLocaleTimeString();
 
   // Build GPS point
