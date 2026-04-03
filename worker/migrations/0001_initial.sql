@@ -1,5 +1,5 @@
 -- Search Operations
-CREATE TABLE search_operations (
+CREATE TABLE IF NOT EXISTS search_operations (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -9,7 +9,7 @@ CREATE TABLE search_operations (
 );
 
 -- Participants (volunteers who join a search, no login required)
-CREATE TABLE participants (
+CREATE TABLE IF NOT EXISTS participants (
   id TEXT PRIMARY KEY,
   search_id TEXT NOT NULL,
   device_uuid TEXT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE participants (
 );
 
 -- GPS tracks (append-only for non-admins)
-CREATE TABLE gps_tracks (
+CREATE TABLE IF NOT EXISTS gps_tracks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   search_id TEXT NOT NULL,
   device_uuid TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE gps_tracks (
 );
 
 -- Admins (authenticated via Google OAuth)
-CREATE TABLE admins (
+CREATE TABLE IF NOT EXISTS admins (
   id TEXT PRIMARY KEY,
   google_id TEXT UNIQUE NOT NULL,
   email TEXT NOT NULL,
@@ -40,9 +40,9 @@ CREATE TABLE admins (
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_participants_search ON participants(search_id);
-CREATE INDEX idx_participants_device ON participants(device_uuid);
-CREATE INDEX idx_gps_tracks_search ON gps_tracks(search_id);
-CREATE INDEX idx_gps_tracks_device ON gps_tracks(device_uuid);
-CREATE INDEX idx_gps_tracks_recorded ON gps_tracks(search_id, recorded_at);
-CREATE INDEX idx_search_operations_status ON search_operations(status);
+CREATE INDEX IF NOT EXISTS idx_participants_search ON participants(search_id);
+CREATE INDEX IF NOT EXISTS idx_participants_device ON participants(device_uuid);
+CREATE INDEX IF NOT EXISTS idx_gps_tracks_search ON gps_tracks(search_id);
+CREATE INDEX IF NOT EXISTS idx_gps_tracks_device ON gps_tracks(device_uuid);
+CREATE INDEX IF NOT EXISTS idx_gps_tracks_recorded ON gps_tracks(search_id, recorded_at);
+CREATE INDEX IF NOT EXISTS idx_search_operations_status ON search_operations(status);
