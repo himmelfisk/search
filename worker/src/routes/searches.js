@@ -1,6 +1,32 @@
 import { Hono } from "hono";
+import { requireAuth } from "../middleware/auth.js";
 
 export const searchRoutes = new Hono();
+
+/**
+ * POST / - Create a new search operation (any authenticated user)
+ * Body: { title, description? }
+ */
+searchRoutes.post("/", requireAuth(), async (c) => {
+  const db = c.env.DB;
+  const user = c.get("user");
+  const body = await c.req.json();
+
+  if (!body.title) {
+    return c.json({ error: "title is required" }, 400);
+  }
+
+  const id = crypto.randomUUID();
+
+  await db
+    .prepare(
+      "INSERT INTO search_operations (id, title, description, created_by, owner_google_id, owner_name, owner_email) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(id, body.title, body.description || null, user.googleId, user.googleId, user.name, user.email)
+    .run();
+
+  return c.json({ id, title: body.title }, 201);
+});
 
 /**
  * GET / - List active search operations (public)
