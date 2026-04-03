@@ -78,6 +78,13 @@ const views = {
 // ---------------------------------------------------------------------------
 // Language selector
 // ---------------------------------------------------------------------------
+
+// Single global listener to close the language dropdown on outside clicks
+document.addEventListener("click", () => {
+  const dd = document.querySelector(".lang-dropdown");
+  if (dd) dd.classList.add("hidden");
+});
+
 function buildLanguageSelector() {
   const container = document.getElementById("lang-selector");
   if (!container) return;
@@ -111,9 +118,6 @@ function buildLanguageSelector() {
     e.stopPropagation();
     dropdown.classList.toggle("hidden");
   });
-
-  // Close dropdown when clicking elsewhere
-  document.addEventListener("click", () => dropdown.classList.add("hidden"));
 
   container.appendChild(btn);
   container.appendChild(dropdown);
