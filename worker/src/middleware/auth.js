@@ -26,6 +26,29 @@ export async function verifyGoogleToken(idToken) {
 }
 
 /**
+ * Middleware that requires a valid authenticated user.
+ * Expects header: Authorization: Bearer <google_id_token>
+ * Sets c.user with { googleId, email, name }.
+ */
+export function requireAuth() {
+  return async (c, next) => {
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return c.json({ error: "Authorization required" }, 401);
+    }
+
+    const token = authHeader.slice(7);
+    const user = await verifyGoogleToken(token);
+    if (!user) {
+      return c.json({ error: "Invalid or expired token" }, 401);
+    }
+
+    c.set("user", user);
+    await next();
+  };
+}
+
+/**
  * Middleware that requires a valid admin session.
  * Expects header: Authorization: Bearer <google_id_token>
  */

@@ -683,7 +683,7 @@ async function submitCreateSearch() {
 
   try {
     await apiPost(
-      "/api/admin/searches",
+      "/api/searches",
       { title, description: description || undefined },
       true
     );
@@ -691,8 +691,8 @@ async function submitCreateSearch() {
     await loadSearches();
   } catch (err) {
     errorEl.textContent =
-      err.status === 403
-        ? "Your account does not have admin access to create searches."
+      err.status === 401
+        ? "You must be signed in to create searches."
         : `Failed to create search: ${err.message}`;
     errorEl.classList.remove("hidden");
   } finally {
