@@ -48,7 +48,6 @@ let isAdmin = false; // true after /api/auth/google confirms admin
 // Auth DOM elements
 const signedOutEl = document.getElementById("signed-out");
 const signedInEl = document.getElementById("signed-in");
-const userAvatarEl = document.getElementById("user-avatar");
 const userNameEl = document.getElementById("user-name");
 const signOutBtn = document.getElementById("sign-out-btn");
 
@@ -272,12 +271,6 @@ function setGoogleUser(credential, payload) {
   signedOutEl.classList.add("hidden");
   signedInEl.classList.remove("hidden");
   userNameEl.textContent = payload.name || payload.email;
-  if (payload.picture) {
-    userAvatarEl.src = payload.picture;
-    userAvatarEl.style.display = "";
-  } else {
-    userAvatarEl.style.display = "none";
-  }
   checkAdminStatus(credential);
 }
 
