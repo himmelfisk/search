@@ -9,4 +9,4 @@ database_id = "8ef70bdc-dd5b-4c36-a14e-35b550da6c7c"
 migrations_dir = "migrations"
 
 [vars]
-GOOGLE_CLIENT_ID = "10152340554-g0bdlarlbf8tr4ldn31foq79uh0feqn8.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "10152340554-f8qvagg87cpbnaoa9a7k3qasarf3ouhb.apps.googleusercontent.com"
