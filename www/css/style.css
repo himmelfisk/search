@@ -176,6 +176,77 @@ html, body {
   margin-bottom: 0.35rem;
 }
 
+/* ---------- Language selector ---------- */
+.lang-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lang-btn {
+  background: none;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.lang-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 300;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.lang-dropdown.hidden {
+  display: none !important;
+}
+
+.lang-option {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.lang-option:hover {
+  background: var(--surface-hover);
+}
+
+.lang-option.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lang-option + .lang-option {
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- Auth bar ---------- */
 .auth-bar {
   display: flex;
