@@ -30,10 +30,10 @@ jobs:
 
       - name: Apply D1 migrations
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx wrangler d1 migrations apply search-db --remote
+        run: npx -y wrangler d1 migrations apply search-db --remote
         working-directory: worker
 
       - name: Deploy Worker
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npx wrangler deploy
+        run: npx -y wrangler deploy
         working-directory: worker
