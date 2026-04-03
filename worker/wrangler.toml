@@ -5,5 +5,5 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "search-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "8ef70bdc-dd5b-4c36-a14e-35b550da6c7c"
 migrations_dir = "migrations"
