@@ -10,7 +10,7 @@ import L from "leaflet";
 // worker.  GOOGLE_CLIENT_ID can be left empty if the worker has it configured
 // – it will be fetched automatically from /api/config.
 // ---------------------------------------------------------------------------
-const API_BASE = typeof __API_BASE__ !== "undefined" ? __API_BASE__ : ""; // eslint-disable-line no-undef
+const API_BASE = (typeof __API_BASE__ !== "undefined" ? __API_BASE__ : "").replace(/\/+$/, ""); // eslint-disable-line no-undef
 let GOOGLE_CLIENT_ID = ""; // Your Google OAuth 2.0 client ID (or fetched from API)
 
 // ---------------------------------------------------------------------------
