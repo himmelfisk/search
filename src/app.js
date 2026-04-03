@@ -640,7 +640,6 @@ function stopTracking() {
 function highlightSignIn() {
   const signInEl = document.getElementById("signed-out");
   if (!signInEl) return;
-  signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
   signInEl.classList.add("highlight-signin");
   setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
 }
