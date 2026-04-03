@@ -686,18 +686,18 @@ function escapeHtml(str) {
 startSearchBtn.addEventListener("click", async () => {
   // Require Google sign-in
   if (!googleCredential) {
+    // Scroll the sign-in button into view and highlight it so the user knows where to log in
+    const authBar = document.getElementById("auth-bar");
+    authBar.scrollIntoView({ behavior: "smooth", block: "start" });
+    signedOutEl.classList.add("highlight-signin");
+    setTimeout(() => signedOutEl.classList.remove("highlight-signin"), 2000);
+
     if (
       typeof google !== "undefined" &&
       google.accounts &&
       google.accounts.id
     ) {
-      google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          alert("Please sign in with Google to start a search.");
-        }
-      });
-    } else {
-      alert("Google Sign-In is not available. Please configure GOOGLE_CLIENT_ID.");
+      google.accounts.id.prompt();
     }
     return;
   }
