@@ -212,19 +212,22 @@ npm run dev                # start local dev server (default: http://localhost:8
 
 ### API Endpoints
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/` | Health check — returns `{ "status": "ok" }` |
-| `GET` | `/operations` | List all search operations (optional `?status=active`) |
-| `GET` | `/operations/:id` | Get a single operation |
-| `POST` | `/operations` | Create an operation (`{ title, description?, latitude?, longitude? }`) |
-| `PUT` | `/operations/:id` | Update an operation |
-| `DELETE` | `/operations/:id` | Delete an operation |
-| `GET` | `/operations/:id/participants` | List participants for an operation |
-| `POST` | `/operations/:id/join` | Join an operation (`{ device_uuid, name? }`) |
-| `DELETE` | `/operations/:id/leave` | Leave an operation (`?device_uuid=...`) |
-| `GET` | `/operations/:id/tracks` | Get GPS tracks (optional `?device_uuid=...`) |
-| `POST` | `/operations/:id/tracks` | Submit GPS track point(s) — single object or array |
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/` | — | Health check — returns `{ "status": "ok" }` |
+| `GET` | `/config` | — | Returns `{ googleClientId }` for frontend initialisation |
+| `GET` | `/operations` | — | List all search operations (optional `?status=active`) |
+| `GET` | `/operations/:id` | — | Get a single operation |
+| `POST` | `/operations` | **Google** | Create an operation (`{ title, description?, latitude?, longitude? }`) — sets `owner_*` fields from the token |
+| `PUT` | `/operations/:id` | **Google** | Update an operation (owner only) |
+| `DELETE` | `/operations/:id` | **Google** | Delete an operation (owner only) |
+| `GET` | `/operations/:id/participants` | — | List participants for an operation |
+| `POST` | `/operations/:id/join` | — | Join an operation (`{ device_uuid, name? }`) |
+| `DELETE` | `/operations/:id/leave` | — | Leave an operation (`?device_uuid=...`) |
+| `GET` | `/operations/:id/tracks` | — | Get GPS tracks (optional `?device_uuid=...`) |
+| `POST` | `/operations/:id/tracks` | — | Submit GPS track point(s) — single object or array |
+
+> **Auth:** Endpoints marked **Google** expect an `Authorization: Bearer <google_id_token>` header.
 
 ### Deploy
 
@@ -240,7 +243,8 @@ The worker also deploys automatically via GitHub Actions when changes in `worker
 
 1. Create a D1 database in the Cloudflare dashboard (or via CLI: `wrangler d1 create search-db`).
 2. Copy the **database ID** and paste it into `worker/wrangler.toml` replacing `DATABASE_ID_HERE`.
-3. Ensure the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set (same as for Pages — the API token also needs **Workers: Edit** and **D1: Edit** permissions).
+3. Set `GOOGLE_CLIENT_ID` in `worker/wrangler.toml` (see [Google OAuth Setup](#google-oauth-setup) below).
+4. Ensure the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set (same as for Pages — the API token also needs **Workers: Edit** and **D1: Edit** permissions).
 
 ---
 
@@ -263,3 +267,28 @@ Add the following secrets to your GitHub repository (**Settings → Secrets and 
 | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (found on the dashboard overview page) |
 
 > **First deploy:** The Cloudflare Pages project `search-dashboard` will be created automatically on the first run. No manual setup in the Cloudflare dashboard is needed.
+
+---
+
+## Google OAuth Setup
+
+The **Start Search** button requires Google sign-in so that each search operation has an identified owner. Follow these steps to obtain a Google OAuth 2.0 Client ID:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project (or select an existing one).
+3. Navigate to **APIs & Services → Credentials**.
+4. Click **Create Credentials → OAuth client ID**.
+5. Select **Web application** as the application type.
+6. Under **Authorized JavaScript origins**, add every origin where the app will run, for example:
+   - `http://localhost:8080` (local development)
+   - `https://search-dashboard.pages.dev` (production)
+7. Click **Create** and copy the **Client ID** (it looks like `123456789-abc.apps.googleusercontent.com`).
+
+### Configure the Client ID
+
+| Location | File | What to change |
+|---|---|---|
+| **Worker (backend)** | `worker/wrangler.toml` | Replace `YOUR_GOOGLE_CLIENT_ID` in `[vars]` |
+| **Frontend** | `src/app.js` | Replace the `GOOGLE_CLIENT_ID` constant at the top of the file |
+
+After updating both values, rebuild the frontend (`npm run build`) and redeploy the worker.

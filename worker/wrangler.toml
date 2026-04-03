@@ -2,6 +2,9 @@ name = "search-api"
 main = "src/index.js"
 compatibility_date = "2025-04-01"
 
+[vars]
+GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "search-db"
