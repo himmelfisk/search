@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "This app is used for coordinating search operations. It supports **Android**, **iOS**, and **Web** platforms.",
   "scripts": {
-    "build": "esbuild src/app.js --bundle --format=esm --outfile=www/js/app.js",
+    "build": "node build.mjs",
     "sync": "npm run build && cap sync",
     "sync:android": "npm run build && cap sync android",
     "sync:ios": "npm run build && cap sync ios",

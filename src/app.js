@@ -3,12 +3,14 @@ import { Geolocation } from "@capacitor/geolocation";
 import L from "leaflet";
 
 // ---------------------------------------------------------------------------
-// Configuration – replace these with your own values before deploying.
-// API_BASE can be left empty if the frontend is served from the same origin
-// as the worker. GOOGLE_CLIENT_ID can be left empty if the worker has it
-// configured – it will be fetched automatically from /api/config.
+// Configuration
+// API_BASE is injected at build time via the API_BASE env var (see build.mjs).
+// When empty the app calls the same origin – works when the frontend is served
+// from the worker or when Cloudflare Pages _redirects proxy /api/* to the
+// worker.  GOOGLE_CLIENT_ID can be left empty if the worker has it configured
+// – it will be fetched automatically from /api/config.
 // ---------------------------------------------------------------------------
-const API_BASE = ""; // e.g. "https://search-api.example.workers.dev"
+const API_BASE = typeof __API_BASE__ !== "undefined" ? __API_BASE__ : ""; // eslint-disable-line no-undef
 let GOOGLE_CLIENT_ID = ""; // Your Google OAuth 2.0 client ID (or fetched from API)
 
 // ---------------------------------------------------------------------------
@@ -41,6 +43,7 @@ const deviceUUID = getDeviceUUID();
 // ---------------------------------------------------------------------------
 let googleCredential = null; // raw JWT token
 let googleUser = null; // decoded { sub, name, email, picture, … }
+let isAdmin = false; // true after /api/auth/google confirms admin
 
 // Auth DOM elements
 const signedOutEl = document.getElementById("signed-out");
@@ -128,12 +131,30 @@ window.addEventListener("online", flushQueue);
 // ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function assertJsonResponse(resp) {
+  const ct = resp.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    throw new ApiError(
+      "API returned a non-JSON response – check that API_BASE is configured correctly.",
+      resp.status
+    );
+  }
+}
+
 async function apiGet(path) {
   const resp = await fetch(`${API_BASE}${path}`);
   if (!resp.ok) {
     const body = await resp.json().catch(() => ({}));
-    throw new Error(body.error || `API error: ${resp.status}`);
+    throw new ApiError(body.error || `API error: ${resp.status}`, resp.status);
   }
+  assertJsonResponse(resp);
   return resp.json();
 }
 
@@ -149,8 +170,9 @@ async function apiPost(path, body, auth = false) {
   });
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}));
-    throw new Error(data.error || `HTTP ${resp.status}`);
+    throw new ApiError(data.error || `HTTP ${resp.status}`, resp.status);
   }
+  assertJsonResponse(resp);
   return resp.json();
 }
 
@@ -257,14 +279,34 @@ function setGoogleUser(credential, payload) {
   } else {
     userAvatarEl.style.display = "none";
   }
+  checkAdminStatus(credential);
+}
+
+async function checkAdminStatus(credential) {
+  try {
+    const data = await apiPost("/api/auth/google", { id_token: credential });
+    isAdmin = !!data.is_admin;
+  } catch {
+    isAdmin = false;
+  }
+  updateCreateButton();
+}
+
+function updateCreateButton() {
+  const btn = document.getElementById("create-search-btn");
+  if (!btn) return;
+  // Show "New Search" to signed-in users; the backend enforces admin-only creation
+  btn.classList.toggle("hidden", !googleCredential);
 }
 
 function signOut() {
   googleCredential = null;
   googleUser = null;
+  isAdmin = false;
   localStorage.removeItem("google_credential");
   signedInEl.classList.add("hidden");
   signedOutEl.classList.remove("hidden");
+  updateCreateButton();
   if (typeof google !== "undefined" && google.accounts) {
     google.accounts.id.disableAutoSelect();
   }
@@ -593,6 +635,77 @@ function stopTracking() {
     watchId = null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Create Search
+// ---------------------------------------------------------------------------
+function openCreateSearch() {
+  if (!googleCredential) {
+    // Highlight the sign-in button so the user knows they need to log in first
+    const signInEl = document.getElementById("signed-out");
+    signInEl.classList.add("highlight-signin");
+    setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+    return;
+  }
+  const modal = document.getElementById("create-search-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    document.getElementById("create-title").value = "";
+    document.getElementById("create-description").value = "";
+    document.getElementById("create-error").classList.add("hidden");
+  }
+}
+
+function closeCreateSearch() {
+  const modal = document.getElementById("create-search-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function submitCreateSearch() {
+  const title = document.getElementById("create-title").value.trim();
+  const description = document.getElementById("create-description").value.trim();
+  const errorEl = document.getElementById("create-error");
+  const btn = document.getElementById("create-submit-btn");
+
+  if (!title) {
+    errorEl.textContent = "Title is required.";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+  errorEl.classList.add("hidden");
+
+  try {
+    await apiPost(
+      "/api/admin/searches",
+      { title, description: description || undefined },
+      true
+    );
+    closeCreateSearch();
+    await loadSearches();
+  } catch (err) {
+    errorEl.textContent =
+      err.status === 403
+        ? "Your account does not have admin access to create searches."
+        : `Failed to create search: ${err.message}`;
+    errorEl.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create";
+  }
+}
+
+// Wire up create-search UI
+document.getElementById("create-search-btn")?.addEventListener("click", openCreateSearch);
+document.getElementById("create-cancel-btn")?.addEventListener("click", closeCreateSearch);
+document.getElementById("create-submit-btn")?.addEventListener("click", submitCreateSearch);
+
+// Close modal on backdrop click
+document.getElementById("create-search-modal")?.addEventListener("click", (e) => {
+  if (e.target.id === "create-search-modal") closeCreateSearch();
+});
 
 // ---------------------------------------------------------------------------
 // Initialise
