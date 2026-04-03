@@ -14,7 +14,19 @@
     <h1>Search Operations</h1>
     <p id="status" class="status">Requesting GPS permission…</p>
 
+    <button id="track-btn" class="track-btn">Start route</button>
     <div id="map"></div>
+
+    <div id="route-stats" class="coordinates hidden">
+      <div class="coord-row">
+        <span class="label">Distance</span>
+        <span id="distance" class="value">—</span>
+      </div>
+      <div class="coord-row">
+        <span class="label">Points</span>
+        <span id="point-count" class="value">—</span>
+      </div>
+    </div>
 
     <div id="coordinates" class="coordinates hidden">
       <div class="coord-row">

@@ -55,6 +55,32 @@ h1 {
   z-index: 0;
 }
 
+.track-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.track-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.track-btn.active {
+  background: #f97316;
+  border-color: #f97316;
+  color: #fff;
+}
+
 .coordinates {
   background: var(--surface);
   border-radius: 12px;
