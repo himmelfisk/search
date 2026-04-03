@@ -1,5 +1,12 @@
+-- Drop pre-existing tables that may have incorrect schemas from earlier
+-- corrupted migrations. Order matters: drop tables with foreign keys first.
+DROP TABLE IF EXISTS gps_tracks;
+DROP TABLE IF EXISTS participants;
+DROP TABLE IF EXISTS admins;
+DROP TABLE IF EXISTS search_operations;
+
 -- Search Operations
-CREATE TABLE IF NOT EXISTS search_operations (
+CREATE TABLE search_operations (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -9,7 +16,7 @@ CREATE TABLE IF NOT EXISTS search_operations (
 );
 
 -- Participants (volunteers who join a search, no login required)
-CREATE TABLE IF NOT EXISTS participants (
+CREATE TABLE participants (
   id TEXT PRIMARY KEY,
   search_id TEXT NOT NULL,
   device_uuid TEXT NOT NULL,
@@ -20,7 +27,7 @@ CREATE TABLE IF NOT EXISTS participants (
 );
 
 -- GPS tracks (append-only for non-admins)
-CREATE TABLE IF NOT EXISTS gps_tracks (
+CREATE TABLE gps_tracks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   search_id TEXT NOT NULL,
   device_uuid TEXT NOT NULL,
@@ -32,7 +39,7 @@ CREATE TABLE IF NOT EXISTS gps_tracks (
 );
 
 -- Admins (authenticated via Google OAuth)
-CREATE TABLE IF NOT EXISTS admins (
+CREATE TABLE admins (
   id TEXT PRIMARY KEY,
   google_id TEXT UNIQUE NOT NULL,
   email TEXT NOT NULL,
@@ -40,9 +47,9 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 -- Indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_participants_search ON participants(search_id);
-CREATE INDEX IF NOT EXISTS idx_participants_device ON participants(device_uuid);
-CREATE INDEX IF NOT EXISTS idx_gps_tracks_search ON gps_tracks(search_id);
-CREATE INDEX IF NOT EXISTS idx_gps_tracks_device ON gps_tracks(device_uuid);
-CREATE INDEX IF NOT EXISTS idx_gps_tracks_recorded ON gps_tracks(search_id, recorded_at);
-CREATE INDEX IF NOT EXISTS idx_search_operations_status ON search_operations(status);
+CREATE INDEX idx_participants_search ON participants(search_id);
+CREATE INDEX idx_participants_device ON participants(device_uuid);
+CREATE INDEX idx_gps_tracks_search ON gps_tracks(search_id);
+CREATE INDEX idx_gps_tracks_device ON gps_tracks(device_uuid);
+CREATE INDEX idx_gps_tracks_recorded ON gps_tracks(search_id, recorded_at);
+CREATE INDEX idx_search_operations_status ON search_operations(status);
