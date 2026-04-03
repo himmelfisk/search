@@ -1,0 +1,44 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "worker/**"
+
+jobs:
+  deploy-worker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install worker dependencies
+        run: cd worker && npm ci
+
+      - name: Apply D1 migrations
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply search-db --remote
+          workingDirectory: worker
+
+      - name: Deploy Worker
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          workingDirectory: worker
