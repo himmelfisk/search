@@ -3,10 +3,24 @@ import { Geolocation } from "@capacitor/geolocation";
 import L from "leaflet";
 
 // ---------------------------------------------------------------------------
-// Configuration – replace these with your own values
+// Configuration – replace these with your own values before deploying.
+// See the "Google OAuth Setup" section in readme.md for instructions.
 // ---------------------------------------------------------------------------
 const API_URL = ""; // e.g. "https://search-api.example.workers.dev"
 const GOOGLE_CLIENT_ID = ""; // Your Google OAuth 2.0 client ID
+
+if (!API_URL) {
+  console.warn(
+    "API_URL is not configured in src/app.js – API calls will fail. " +
+      "Set it to your Cloudflare Worker URL (see readme.md)."
+  );
+}
+if (!GOOGLE_CLIENT_ID) {
+  console.warn(
+    "GOOGLE_CLIENT_ID is not configured in src/app.js – Google Sign-In will not work. " +
+      "See the Google OAuth Setup section in readme.md."
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Leaflet marker icon fix
@@ -179,7 +193,7 @@ function initGoogleSignIn() {
   if (stored) {
     try {
       const payload = decodeJwtPayload(stored);
-      if (payload.exp > Date.now() / 1000) {
+      if (payload.exp > Date.now() / 1000 + 60) {
         setGoogleUser(stored, payload);
       } else {
         localStorage.removeItem("google_credential");
@@ -395,7 +409,7 @@ async function uploadPendingPoints() {
     await apiPost(`/operations/${currentOperation.id}/tracks`, batch);
   } catch (err) {
     // Re-queue on failure so we don't lose points
-    pendingTrackPoints.unshift(...batch);
+    pendingTrackPoints = batch.concat(pendingTrackPoints);
     console.error("Track upload failed:", err);
   }
 }

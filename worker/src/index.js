@@ -116,7 +116,7 @@ app.put("/operations/:id", requireAuth, async (c) => {
   if (!existing) {
     return c.json({ error: "Operation not found" }, 404);
   }
-  if (existing.owner_google_id && existing.owner_google_id !== user.sub) {
+  if (!existing.owner_google_id || existing.owner_google_id !== user.sub) {
     return c.json({ error: "Only the owner can update this operation" }, 403);
   }
 
@@ -157,7 +157,7 @@ app.delete("/operations/:id", requireAuth, async (c) => {
   if (!existing) {
     return c.json({ error: "Operation not found" }, 404);
   }
-  if (existing.owner_google_id && existing.owner_google_id !== user.sub) {
+  if (!existing.owner_google_id || existing.owner_google_id !== user.sub) {
     return c.json({ error: "Only the owner can delete this operation" }, 403);
   }
 
