@@ -29,6 +29,80 @@ let userMarker = null;
 let accuracyCircle = null;
 let isFirstPosition = true;
 
+// Route tracking state
+let routeTracking = false;
+let routePoints = [];
+let routeLine = null;
+let totalDistance = 0;
+
+const trackBtn = document.getElementById("track-btn");
+const distanceEl = document.getElementById("distance");
+const pointCountEl = document.getElementById("point-count");
+const routeStatsEl = document.getElementById("route-stats");
+
+function haversineDistance([lat1, lon1], [lat2, lon2]) {
+  const R = 6371000; // Earth radius in metres
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(metres) {
+  if (metres < 1000) return `${Math.round(metres)} m`;
+  return `${(metres / 1000).toFixed(2)} km`;
+}
+
+function startRoute() {
+  routeTracking = true;
+  routePoints = [];
+  totalDistance = 0;
+  if (routeLine) {
+    map.removeLayer(routeLine);
+  }
+  routeLine = L.polyline([], {
+    color: "#f97316",
+    weight: 4,
+    opacity: 0.85,
+  }).addTo(map);
+  trackBtn.textContent = "Stop route";
+  trackBtn.classList.add("active");
+  routeStatsEl.classList.remove("hidden");
+  distanceEl.textContent = "0 m";
+  pointCountEl.textContent = "0";
+}
+
+function stopRoute() {
+  routeTracking = false;
+  trackBtn.textContent = "Start route";
+  trackBtn.classList.remove("active");
+}
+
+trackBtn.addEventListener("click", () => {
+  if (routeTracking) {
+    stopRoute();
+  } else {
+    startRoute();
+  }
+});
+
+function recordRoutePoint(latlng) {
+  if (!routeTracking) return;
+  if (routePoints.length > 0) {
+    totalDistance += haversineDistance(
+      routePoints[routePoints.length - 1],
+      latlng
+    );
+  }
+  routePoints.push(latlng);
+  routeLine.addLatLng(latlng);
+  distanceEl.textContent = formatDistance(totalDistance);
+  pointCountEl.textContent = String(routePoints.length);
+}
+
 function showError(message) {
   statusEl.textContent = message;
   statusEl.classList.add("error");
@@ -81,6 +155,9 @@ function updatePosition(position) {
     map.setView(latlng, 16);
     isFirstPosition = false;
   }
+
+  // Record point on the route polyline
+  recordRoutePoint(latlng);
 }
 
 async function checkLocationPermission() {
