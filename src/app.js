@@ -42,7 +42,8 @@ async function checkLocationPermission() {
   try {
     const permStatus = await Geolocation.checkPermissions();
     return permStatus.location;
-  } catch {
+  } catch (err) {
+    console.warn("Could not check location permissions:", err);
     return "prompt";
   }
 }
