@@ -46,6 +46,15 @@ h1 {
   color: #4ade80;
 }
 
+#map {
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+  z-index: 0;
+}
+
 .coordinates {
   background: var(--surface);
   border-radius: 12px;
