@@ -158,6 +158,12 @@ html, body {
   color: var(--text-muted);
 }
 
+.badge-owner {
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.65rem;
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 1rem;

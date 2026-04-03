@@ -433,7 +433,7 @@ async function loadSearches() {
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span class="card-title">${escapeHtml(search.title)}</span>
           <span style="display:flex;align-items:center;gap:0.35rem;">
-            ${isOwned ? '<span class="badge" style="background:var(--orange);font-size:0.65rem;">Owner</span>' : ""}
+            ${isOwned ? '<span class="badge badge-owner">Owner</span>' : ""}
             <span class="badge badge-${search.status === "active" ? "active" : "closed"}">${escapeHtml(search.status)}</span>
           </span>
         </div>
@@ -697,6 +697,10 @@ const ROUTE_COLORS = [
   "#facc15", "#2dd4bf", "#e879f9", "#60a5fa", "#f472b6",
 ];
 
+// GPS jitter filtering thresholds
+const MIN_MOVEMENT_METERS = 2;   // ignore movements smaller than this (GPS noise)
+const MAX_MOVEMENT_METERS = 10000; // ignore jumps larger than this (GPS glitch)
+
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000; // Earth radius in meters
   const toRad = (deg) => (deg * Math.PI) / 180;
@@ -811,7 +815,7 @@ function renderDashboard(data) {
         points[i].latitude, points[i].longitude
       );
       // Only count movements > 2m (filter GPS jitter)
-      if (d > 2 && d < 10000) {
+      if (d > MIN_MOVEMENT_METERS && d < MAX_MOVEMENT_METERS) {
         deviceDist += d;
       }
     }
