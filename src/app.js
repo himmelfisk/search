@@ -228,7 +228,7 @@ function renderParticipants(participants) {
   list.innerHTML = "";
 
   if (participants.length === 0) {
-    list.innerHTML = '<li style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem 0;">No participants yet. Be the first to join!</li>';
+    list.innerHTML = '<li class="text-muted-sm" style="padding:0.5rem 0;">No participants yet. Be the first to join!</li>';
     return;
   }
 

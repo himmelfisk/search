@@ -65,10 +65,9 @@ gpsRoutes.post("/", async (c) => {
 });
 
 /**
- * GET /:searchId - Get GPS tracks for a search
- * Query params: device_uuid?, since?, limit?
- * Note: In a production app you might want to restrict this to admins.
- * For now it's public so participants can see the search progress.
+ * GET /:searchId - Get GPS tracks for a search (own device only)
+ * Requires device_uuid query param so participants can only see their own tracks.
+ * Admins can see all tracks via the /api/admin/searches/:id/gps endpoint.
  */
 gpsRoutes.get("/:searchId", async (c) => {
   const db = c.env.DB;
@@ -77,14 +76,13 @@ gpsRoutes.get("/:searchId", async (c) => {
   const since = c.req.query("since");
   const limit = Math.min(parseInt(c.req.query("limit") || "1000", 10), 10000);
 
-  let query =
-    "SELECT id, device_uuid, latitude, longitude, accuracy, recorded_at FROM gps_tracks WHERE search_id = ?";
-  const params = [searchId];
-
-  if (deviceUuid) {
-    query += " AND device_uuid = ?";
-    params.push(deviceUuid);
+  if (!deviceUuid) {
+    return c.json({ error: "device_uuid query parameter is required" }, 400);
   }
+
+  let query =
+    "SELECT id, latitude, longitude, accuracy, recorded_at FROM gps_tracks WHERE search_id = ? AND device_uuid = ?";
+  const params = [searchId, deviceUuid];
 
   if (since) {
     query += " AND recorded_at > ?";

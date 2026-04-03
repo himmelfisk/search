@@ -457,6 +457,9 @@ html, body {
 .mb-1 { margin-bottom: 0.5rem; }
 .mb-2 { margin-bottom: 1rem; }
 .hidden { display: none !important; }
+.text-sm { font-size: 0.8rem; }
+.text-muted-sm { font-size: 0.85rem; color: var(--text-muted); }
+.text-lg { font-size: 1.2rem; }
 
 /* Desktop enhancements (progressive) */
 @media (min-width: 768px) {
