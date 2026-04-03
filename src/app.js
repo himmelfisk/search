@@ -240,10 +240,9 @@ async function initGoogleSignIn() {
     callback: handleGoogleCredential,
   });
 
-  google.accounts.id.renderButton(
-    document.getElementById("google-signin-btn"),
-    { theme: "filled_black", size: "medium", shape: "pill" }
-  );
+  document.getElementById("google-signin-btn").addEventListener("click", () => {
+    google.accounts.id.prompt();
+  });
 
   // Restore session from localStorage if the token is still valid
   const stored = localStorage.getItem("google_credential");
