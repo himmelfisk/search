@@ -131,18 +131,30 @@ window.addEventListener("online", flushQueue);
 // ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function assertJsonResponse(resp) {
+  const ct = resp.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    throw new ApiError(
+      "API returned a non-JSON response – check that API_BASE is configured correctly.",
+      resp.status
+    );
+  }
+}
+
 async function apiGet(path) {
   const resp = await fetch(`${API_BASE}${path}`);
   if (!resp.ok) {
     const body = await resp.json().catch(() => ({}));
-    throw new Error(body.error || `API error: ${resp.status}`);
+    throw new ApiError(body.error || `API error: ${resp.status}`, resp.status);
   }
-  const ct = resp.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) {
-    throw new Error(
-      "API returned a non-JSON response – check that API_BASE is configured correctly."
-    );
-  }
+  assertJsonResponse(resp);
   return resp.json();
 }
 
@@ -158,14 +170,9 @@ async function apiPost(path, body, auth = false) {
   });
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}));
-    throw new Error(data.error || `HTTP ${resp.status}`);
+    throw new ApiError(data.error || `HTTP ${resp.status}`, resp.status);
   }
-  const ct = resp.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) {
-    throw new Error(
-      "API returned a non-JSON response – check that API_BASE is configured correctly."
-    );
-  }
+  assertJsonResponse(resp);
   return resp.json();
 }
 
@@ -680,7 +687,7 @@ async function submitCreateSearch() {
     await loadSearches();
   } catch (err) {
     errorEl.textContent =
-      err.message === "Not an admin"
+      err.status === 403
         ? "Your account does not have admin access to create searches."
         : `Failed to create search: ${err.message}`;
     errorEl.classList.remove("hidden");
