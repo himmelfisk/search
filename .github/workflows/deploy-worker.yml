@@ -10,6 +10,9 @@ on:
     paths:
       - "worker/**"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy-worker:
     runs-on: ubuntu-latest
