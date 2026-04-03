@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   deploy-stage:
     runs-on: ubuntu-latest
@@ -14,6 +11,9 @@ jobs:
       contents: read
       deployments: write
       pull-requests: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v6
 
@@ -29,16 +29,8 @@ jobs:
           API_BASE: ${{ secrets.WORKER_URL }}
 
       - name: Create Cloudflare Pages project (if not exists)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages project create search-dashboard --production-branch=main
+        run: npx -y wrangler pages project create search-dashboard --production-branch=main
         continue-on-error: true
 
       - name: Deploy to Cloudflare Pages (stage)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy www --project-name=search-dashboard --branch=${{ github.head_ref }}
+        run: npx -y wrangler pages deploy www --project-name=search-dashboard --branch=${{ github.head_ref }}
