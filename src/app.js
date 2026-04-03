@@ -293,10 +293,8 @@ async function checkAdminStatus(credential) {
 }
 
 function updateCreateButton() {
-  const btn = document.getElementById("create-search-btn");
-  if (!btn) return;
-  // Show "New Search" to signed-in users; the backend enforces admin-only creation
-  btn.classList.toggle("hidden", !googleCredential);
+  // Button is always visible – no hiding logic needed.
+  // The openCreateSearch function handles the sign-in prompt.
 }
 
 function signOut() {
@@ -641,10 +639,24 @@ function stopTracking() {
 // ---------------------------------------------------------------------------
 function openCreateSearch() {
   if (!googleCredential) {
-    // Highlight the sign-in button so the user knows they need to log in first
-    const signInEl = document.getElementById("signed-out");
-    signInEl.classList.add("highlight-signin");
-    setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+    // User is not signed in – trigger Google sign-in prompt
+    if (typeof google !== "undefined" && google.accounts && GOOGLE_CLIENT_ID) {
+      google.accounts.id.prompt((notification) => {
+        // If the prompt was dismissed or skipped, scroll to the sign-in button
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          const signInEl = document.getElementById("signed-out");
+          signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          signInEl.classList.add("highlight-signin");
+          setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+        }
+      });
+    } else {
+      // GIS not available – scroll to the sign-in button
+      const signInEl = document.getElementById("signed-out");
+      signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      signInEl.classList.add("highlight-signin");
+      setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+    }
     return;
   }
   const modal = document.getElementById("create-search-modal");
