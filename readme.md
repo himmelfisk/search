@@ -193,3 +193,25 @@ All listed features are **feasible to implement** with current technologies. The
 4. Transfer it to your device and install it.
 
 > **Note:** On the device you may need to enable **Install from unknown sources** in Settings before installing the APK.
+
+---
+
+## Cloudflare Pages Deployment
+
+The web dashboard is automatically deployed to **Cloudflare Pages** via GitHub Actions:
+
+| Environment | Trigger | URL |
+|---|---|---|
+| **Stage** | Pull request opened/updated against `main` | `https://<branch>.search-dashboard.pages.dev` |
+| **Production** | Push to `main` (PR merged) | `https://search-dashboard.pages.dev` |
+
+### Setup
+
+Add the following secrets to your GitHub repository (**Settings → Secrets and variables → Actions**):
+
+| Secret | Description |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with **Cloudflare Pages: Edit** permission |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID (found on the dashboard overview page) |
+
+> **First deploy:** The Cloudflare Pages project `search-dashboard` will be created automatically on the first run. No manual setup in the Cloudflare dashboard is needed.
