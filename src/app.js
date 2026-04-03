@@ -637,6 +637,14 @@ function stopTracking() {
 // ---------------------------------------------------------------------------
 // Create Search
 // ---------------------------------------------------------------------------
+function highlightSignIn() {
+  const signInEl = document.getElementById("signed-out");
+  if (!signInEl) return;
+  signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  signInEl.classList.add("highlight-signin");
+  setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+}
+
 function openCreateSearch() {
   if (!googleCredential) {
     // User is not signed in – trigger Google sign-in prompt
@@ -644,18 +652,11 @@ function openCreateSearch() {
       google.accounts.id.prompt((notification) => {
         // If the prompt was dismissed or skipped, scroll to the sign-in button
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          const signInEl = document.getElementById("signed-out");
-          signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
-          signInEl.classList.add("highlight-signin");
-          setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+          highlightSignIn();
         }
       });
     } else {
-      // GIS not available – scroll to the sign-in button
-      const signInEl = document.getElementById("signed-out");
-      signInEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      signInEl.classList.add("highlight-signin");
-      setTimeout(() => signInEl.classList.remove("highlight-signin"), 2000);
+      highlightSignIn();
     }
     return;
   }
