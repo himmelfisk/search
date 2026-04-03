@@ -8,15 +8,51 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin="" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <div class="container">
+
+    <!-- Auth bar -->
+    <div id="auth-bar" class="auth-bar">
+      <div id="signed-out" class="auth-state">
+        <div id="google-signin-btn"></div>
+      </div>
+      <div id="signed-in" class="auth-state hidden">
+        <img id="user-avatar" class="avatar" alt="" />
+        <span id="user-name" class="user-name"></span>
+        <button id="sign-out-btn" class="btn-small">Sign out</button>
+      </div>
+    </div>
+
     <h1>Search Operations</h1>
     <p id="status" class="status">Requesting GPS permission…</p>
 
-    <button id="track-btn" class="track-btn">Start route</button>
+    <!-- Home mode controls -->
+    <div id="home-controls">
+      <button id="start-search-btn" class="track-btn">Start Search</button>
+    </div>
+
+    <!-- Owner mode controls -->
+    <div id="owner-controls" class="hidden">
+      <div class="operation-header">
+        <h2 id="owner-op-title" class="op-title"></h2>
+        <span id="participant-count" class="badge">0 participants</span>
+      </div>
+      <button id="end-search-btn" class="track-btn danger">End Search</button>
+    </div>
+
+    <!-- Participant mode controls -->
+    <div id="participant-controls" class="hidden">
+      <div class="operation-header">
+        <h2 id="participant-op-title" class="op-title"></h2>
+      </div>
+      <button id="leave-search-btn" class="track-btn danger">Leave Search</button>
+    </div>
+
     <div id="map"></div>
 
+    <!-- Route stats (visible in owner & participant modes) -->
     <div id="route-stats" class="coordinates hidden">
       <div class="coord-row">
         <span class="label">Distance</span>
@@ -25,6 +61,14 @@
       <div class="coord-row">
         <span class="label">Points</span>
         <span id="point-count" class="value">—</span>
+      </div>
+    </div>
+
+    <!-- Nearby active searches (visible in home mode) -->
+    <div id="nearby-section">
+      <h2 class="section-title">Active Searches Nearby</h2>
+      <div id="nearby-list" class="search-list">
+        <p class="text-muted">Looking for searches…</p>
       </div>
     </div>
 

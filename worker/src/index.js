@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { verifyGoogleToken } from "./auth.js";
 
 const app = new Hono();
 
@@ -7,10 +8,36 @@ const app = new Hono();
 app.use("*", cors());
 
 // ---------------------------------------------------------------------------
+// Auth middleware helper – extracts and verifies the Google ID token from the
+// Authorization header, setting c.set("user", payload) on success.
+// ---------------------------------------------------------------------------
+async function requireAuth(c, next) {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ error: "Authorization header required" }, 401);
+  }
+  const idToken = authHeader.slice(7);
+  try {
+    const user = await verifyGoogleToken(idToken, c.env.GOOGLE_CLIENT_ID);
+    c.set("user", user);
+  } catch (err) {
+    return c.json({ error: `Authentication failed: ${err.message}` }, 401);
+  }
+  await next();
+}
+
+// ---------------------------------------------------------------------------
 // Health check
 // ---------------------------------------------------------------------------
 app.get("/", (c) => {
   return c.json({ status: "ok", service: "search-api" });
+});
+
+// ---------------------------------------------------------------------------
+// Config – exposes the Google Client ID so the frontend can initialise sign-in
+// ---------------------------------------------------------------------------
+app.get("/config", (c) => {
+  return c.json({ googleClientId: c.env.GOOGLE_CLIENT_ID || "" });
 });
 
 // ---------------------------------------------------------------------------
@@ -49,24 +76,50 @@ app.get("/operations/:id", async (c) => {
   return c.json(result);
 });
 
-// Create an operation
-app.post("/operations", async (c) => {
+// Create an operation (requires Google sign-in)
+app.post("/operations", requireAuth, async (c) => {
+  const user = c.get("user");
   const body = await c.req.json();
   const { title, description, latitude, longitude } = body;
   if (!title) {
     return c.json({ error: "title is required" }, 400);
   }
   const result = await c.env.DB.prepare(
-    "INSERT INTO search_operations (title, description, latitude, longitude) VALUES (?, ?, ?, ?) RETURNING *"
+    `INSERT INTO search_operations
+       (title, description, latitude, longitude, owner_google_id, owner_name, owner_email)
+     VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`
   )
-    .bind(title, description || null, latitude || null, longitude || null)
+    .bind(
+      title,
+      description || null,
+      latitude || null,
+      longitude || null,
+      user.sub,
+      user.name || null,
+      user.email || null
+    )
     .first();
   return c.json(result, 201);
 });
 
-// Update an operation
-app.put("/operations/:id", async (c) => {
+// Update an operation (owner only)
+app.put("/operations/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
+  const user = c.get("user");
+
+  // Check ownership
+  const existing = await c.env.DB.prepare(
+    "SELECT owner_google_id FROM search_operations WHERE id = ?"
+  )
+    .bind(id)
+    .first();
+  if (!existing) {
+    return c.json({ error: "Operation not found" }, 404);
+  }
+  if (!existing.owner_google_id || existing.owner_google_id !== user.sub) {
+    return c.json({ error: "Only the owner can update this operation" }, 403);
+  }
+
   const body = await c.req.json();
   const { title, description, status, latitude, longitude } = body;
   const result = await c.env.DB.prepare(
@@ -88,23 +141,29 @@ app.put("/operations/:id", async (c) => {
       id
     )
     .first();
-  if (!result) {
-    return c.json({ error: "Operation not found" }, 404);
-  }
   return c.json(result);
 });
 
-// Delete an operation
-app.delete("/operations/:id", async (c) => {
+// Delete an operation (owner only)
+app.delete("/operations/:id", requireAuth, async (c) => {
   const id = c.req.param("id");
-  const meta = await c.env.DB.prepare(
-    "DELETE FROM search_operations WHERE id = ?"
+  const user = c.get("user");
+
+  const existing = await c.env.DB.prepare(
+    "SELECT owner_google_id FROM search_operations WHERE id = ?"
   )
     .bind(id)
-    .run();
-  if (meta.meta.changes === 0) {
+    .first();
+  if (!existing) {
     return c.json({ error: "Operation not found" }, 404);
   }
+  if (!existing.owner_google_id || existing.owner_google_id !== user.sub) {
+    return c.json({ error: "Only the owner can delete this operation" }, 403);
+  }
+
+  await c.env.DB.prepare("DELETE FROM search_operations WHERE id = ?")
+    .bind(id)
+    .run();
   return c.json({ deleted: true });
 });
 
