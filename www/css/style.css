@@ -304,6 +304,14 @@ html, body {
   outline-offset: 2px;
 }
 
+/* Google rendered sign-in button wrapper */
+#google-signin-rendered {
+  display: none;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
 .btn-small {
   padding: 0.4rem 0.75rem;
   border: none;
@@ -787,6 +795,8 @@ html, body {
   .btn:hover:not(:disabled) {
     opacity: 0.9;
   }
+}
+
 .btn-join {
   padding: 0.4rem 1rem;
   border: 2px solid var(--success);
@@ -803,6 +813,30 @@ html, body {
 .btn-join:hover {
   background: var(--success);
   color: var(--bg);
+}
+
+.btn-dashboard {
+  padding: 0.4rem 1rem;
+  border: 2px solid var(--orange);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--orange);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-dashboard:hover {
+  background: var(--orange);
+  color: #fff;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 /* ---------- Sign-in highlight ---------- */
