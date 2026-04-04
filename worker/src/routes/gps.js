@@ -97,3 +97,43 @@ gpsRoutes.get("/:searchId", async (c) => {
 
   return c.json({ tracks: tracks.results });
 });
+
+/**
+ * POST /ping - Submit an observation ping
+ * Body: { search_id, device_uuid, latitude, longitude }
+ */
+gpsRoutes.post("/ping", async (c) => {
+  const db = c.env.DB;
+  const body = await c.req.json();
+
+  if (!body.search_id || !body.device_uuid || body.latitude == null || body.longitude == null) {
+    return c.json({ error: "Missing required fields" }, 400);
+  }
+
+  if (typeof body.latitude !== "number" || typeof body.longitude !== "number") {
+    return c.json({ error: "latitude and longitude must be numbers" }, 400);
+  }
+
+  if (body.latitude < -90 || body.latitude > 90 || body.longitude < -180 || body.longitude > 180) {
+    return c.json({ error: "Coordinates out of range" }, 400);
+  }
+
+  try {
+    await db
+      .prepare(
+        "INSERT INTO observation_pings (search_id, device_uuid, latitude, longitude, recorded_at) VALUES (?, ?, ?, ?, ?)"
+      )
+      .bind(
+        body.search_id,
+        body.device_uuid,
+        body.latitude,
+        body.longitude,
+        new Date().toISOString()
+      )
+      .run();
+
+    return c.json({ ok: true }, 201);
+  } catch (err) {
+    return c.json({ error: err.message }, 500);
+  }
+});

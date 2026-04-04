@@ -93,10 +93,19 @@ searchRoutes.get("/:id/dashboard", async (c) => {
 
   const tracks = await db.prepare(gpsQuery).bind(...gpsParams).all();
 
+  // Observation pings
+  const pings = await db
+    .prepare(
+      "SELECT op.id, op.device_uuid, op.latitude, op.longitude, op.recorded_at, p.name as participant_name FROM observation_pings op LEFT JOIN participants p ON op.device_uuid = p.device_uuid AND op.search_id = p.search_id WHERE op.search_id = ? ORDER BY op.recorded_at ASC"
+    )
+    .bind(id)
+    .all();
+
   return c.json({
     search,
     participants: participants.results,
     tracks: tracks.results,
+    pings: pings.results,
   });
 });
 
@@ -113,13 +122,14 @@ searchRoutes.post("/", requireAuth(), async (c) => {
     return c.json({ error: "title is required" }, 400);
   }
 
+  const coverageRadius = Math.max(1, Math.min(500, parseInt(body.coverage_radius, 10) || 10));
   const id = crypto.randomUUID();
 
   await db
     .prepare(
-      "INSERT INTO search_operations (id, title, description, created_by, owner_google_id, owner_name, owner_email) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO search_operations (id, title, description, created_by, owner_google_id, owner_name, owner_email, coverage_radius) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     )
-    .bind(id, body.title, body.description || null, user.googleId, user.googleId, user.name, user.email)
+    .bind(id, body.title, body.description || null, user.googleId, user.googleId, user.name, user.email, coverageRadius)
     .run();
 
   return c.json({ id, title: body.title }, 201);
