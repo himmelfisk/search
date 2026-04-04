@@ -82,6 +82,13 @@ const translations = {
     mustBeSignedIn: "Du må være logget inn for å opprette søk.",
     failedToCreateSearch: (msg) => `Kunne ikke opprette søk: ${msg}`,
 
+    // -- Edit search --
+    editSearch: "Rediger søk",
+    save: "Lagre",
+    saving: "Lagrer…",
+    searchUpdated: "Søket er oppdatert.",
+    failedToUpdateSearch: (msg) => `Kunne ikke oppdatere søk: ${msg}`,
+
     // -- Ping --
     pingObservation: "📍 Ping observasjon",
     pingSent: "Observasjon sendt!",
@@ -157,6 +164,13 @@ const translations = {
     creating: "Skapar…",
     mustBeSignedIn: "Du måste vara inloggad för att skapa sökningar.",
     failedToCreateSearch: (msg) => `Kunde inte skapa sökning: ${msg}`,
+
+    // -- Edit search --
+    editSearch: "Redigera sökning",
+    save: "Spara",
+    saving: "Sparar…",
+    searchUpdated: "Sökningen har uppdaterats.",
+    failedToUpdateSearch: (msg) => `Kunde inte uppdatera sökning: ${msg}`,
 
     // -- Ping --
     pingObservation: "📍 Pinga observation",
@@ -234,6 +248,13 @@ const translations = {
     mustBeSignedIn: "Du skal være logget ind for at oprette søgninger.",
     failedToCreateSearch: (msg) => `Kunne ikke oprette søgning: ${msg}`,
 
+    // -- Edit search --
+    editSearch: "Rediger søgning",
+    save: "Gem",
+    saving: "Gemmer…",
+    searchUpdated: "Søgningen er opdateret.",
+    failedToUpdateSearch: (msg) => `Kunne ikke opdatere søgning: ${msg}`,
+
     // -- Ping --
     pingObservation: "📍 Ping observation",
     pingSent: "Observation sendt!",
@@ -309,6 +330,13 @@ const translations = {
     creating: "Creating…",
     mustBeSignedIn: "You must be signed in to create searches.",
     failedToCreateSearch: (msg) => `Failed to create search: ${msg}`,
+
+    // -- Edit search --
+    editSearch: "Edit Search",
+    save: "Save",
+    saving: "Saving…",
+    searchUpdated: "Search updated successfully.",
+    failedToUpdateSearch: (msg) => `Failed to update search: ${msg}`,
 
     // -- Ping --
     pingObservation: "📍 Ping Observation",

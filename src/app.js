@@ -67,6 +67,7 @@ let dashboardLayers = [];
 let dashboardRefreshTimer = null;
 let ownedSearches = [];
 let currentDashboardSearchId = null;
+let currentDashboardSearch = null; // current search object from dashboard data
 
 const headerTitle = document.getElementById("header-title");
 const headerBack = document.getElementById("header-back");
@@ -220,6 +221,22 @@ function applyTranslations() {
   // Ping button
   const pingBtn = document.getElementById("ping-btn");
   if (pingBtn && !pingBtn.disabled) pingBtn.textContent = t("pingObservation");
+
+  // Edit search modal
+  const editModalTitle = document.querySelector("#edit-search-modal .modal-title");
+  if (editModalTitle) editModalTitle.textContent = t("editSearch");
+  const editCoverageLabel = document.querySelector('label[for="edit-coverage"]');
+  if (editCoverageLabel) editCoverageLabel.textContent = t("coverageRadius");
+  const editCoverageInput = document.getElementById("edit-coverage");
+  if (editCoverageInput) editCoverageInput.placeholder = t("coverageRadiusPlaceholder");
+  const editCancelBtn = document.getElementById("edit-cancel-btn");
+  if (editCancelBtn) editCancelBtn.textContent = t("cancel");
+  const editSubmitBtn = document.getElementById("edit-submit-btn");
+  if (editSubmitBtn && !editSubmitBtn.disabled) editSubmitBtn.textContent = t("save");
+
+  // Dashboard edit button
+  const dashboardEditBtn = document.getElementById("dashboard-edit-btn");
+  if (dashboardEditBtn) dashboardEditBtn.title = t("editSearch");
 }
 
 // ---------------------------------------------------------------------------
@@ -340,6 +357,24 @@ async function apiGetAuth(path) {
   if (!resp.ok) {
     const body = await resp.json().catch(() => ({}));
     throw new ApiError(body.error || `API error: ${resp.status}`, resp.status);
+  }
+  assertJsonResponse(resp);
+  return resp.json();
+}
+
+async function apiPut(path, body) {
+  const headers = { "Content-Type": "application/json" };
+  if (googleCredential) {
+    headers["Authorization"] = `Bearer ${googleCredential}`;
+  }
+  const resp = await fetch(`${API_BASE}${path}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const data = await resp.json().catch(() => ({}));
+    throw new ApiError(data.error || `HTTP ${resp.status}`, resp.status);
   }
   assertJsonResponse(resp);
   return resp.json();
@@ -968,6 +1003,8 @@ async function loadDashboardData(searchId) {
 function renderDashboard(data) {
   const { search, participants, tracks, pings } = data;
 
+  currentDashboardSearch = search;
+
   headerTitle.textContent = escapeHtml(search.title);
   document.getElementById("dashboard-title").textContent = search.title;
   document.getElementById("dashboard-meta").textContent =
@@ -1310,6 +1347,59 @@ document.getElementById("create-submit-btn")?.addEventListener("click", submitCr
 // Close modal on backdrop click
 document.getElementById("create-search-modal")?.addEventListener("click", (e) => {
   if (e.target.id === "create-search-modal") closeCreateSearch();
+});
+
+// ---------------------------------------------------------------------------
+// Edit Search
+// ---------------------------------------------------------------------------
+function openEditSearch() {
+  if (!currentDashboardSearch) return;
+  const modal = document.getElementById("edit-search-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    document.getElementById("edit-coverage").value = currentDashboardSearch.coverage_radius || 10;
+    document.getElementById("edit-error").classList.add("hidden");
+  }
+}
+
+function closeEditSearch() {
+  const modal = document.getElementById("edit-search-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+async function submitEditSearch() {
+  if (!currentDashboardSearchId) return;
+  const coverageStr = document.getElementById("edit-coverage").value.trim();
+  const coverageRadius = Math.max(1, Math.min(500, parseInt(coverageStr, 10) || 10));
+  const errorEl = document.getElementById("edit-error");
+  const btn = document.getElementById("edit-submit-btn");
+
+  btn.disabled = true;
+  btn.textContent = t("saving");
+  errorEl.classList.add("hidden");
+
+  try {
+    await apiPut(`/api/searches/${currentDashboardSearchId}`, { coverage_radius: coverageRadius });
+    closeEditSearch();
+    // Reload dashboard data to reflect changes
+    await loadDashboardData(currentDashboardSearchId);
+  } catch (err) {
+    errorEl.textContent = t("failedToUpdateSearch", err.message);
+    errorEl.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t("save");
+  }
+}
+
+// Wire up edit-search UI
+document.getElementById("dashboard-edit-btn")?.addEventListener("click", openEditSearch);
+document.getElementById("edit-cancel-btn")?.addEventListener("click", closeEditSearch);
+document.getElementById("edit-submit-btn")?.addEventListener("click", submitEditSearch);
+
+// Close modal on backdrop click
+document.getElementById("edit-search-modal")?.addEventListener("click", (e) => {
+  if (e.target.id === "edit-search-modal") closeEditSearch();
 });
 
 // ---------------------------------------------------------------------------
