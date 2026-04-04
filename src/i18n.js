@@ -60,6 +60,8 @@ const translations = {
 
     // -- Dashboard --
     dashboard: "Dashbord",
+    openDashboard: "Dashbord",
+    joinSearchCard: "Bli med",
     switchSearch: "Bytt søk:",
     statParticipants: "Deltakere",
     distanceCovered: "Tilbakelagt avstand",
@@ -144,6 +146,8 @@ const translations = {
     unableToAccessGps: (msg) => `Kan inte nå GPS: ${msg}`,
 
     dashboard: "Kontrollpanel",
+    openDashboard: "Kontrollpanel",
+    joinSearchCard: "Gå med",
     switchSearch: "Byt sökning:",
     statParticipants: "Deltagare",
     distanceCovered: "Tillryggalagd sträcka",
@@ -227,6 +231,8 @@ const translations = {
     unableToAccessGps: (msg) => `Kan ikke tilgå GPS: ${msg}`,
 
     dashboard: "Dashboard",
+    openDashboard: "Dashboard",
+    joinSearchCard: "Deltag",
     switchSearch: "Skift søgning:",
     statParticipants: "Deltagere",
     distanceCovered: "Tilbagelagt afstand",
@@ -310,6 +316,8 @@ const translations = {
     unableToAccessGps: (msg) => `Unable to access GPS: ${msg}`,
 
     dashboard: "Dashboard",
+    openDashboard: "Dashboard",
+    joinSearchCard: "Join",
     switchSearch: "Switch search:",
     statParticipants: "Participants",
     distanceCovered: "Distance covered",

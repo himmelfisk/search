@@ -446,8 +446,31 @@ async function initGoogleSignIn() {
     callback: handleGoogleCredential,
   });
 
-  document.getElementById("google-signin-btn").addEventListener("click", () => {
-    google.accounts.id.prompt();
+  // Render a Google-branded sign-in button as a fallback for browsers
+  // where One Tap (prompt) is not supported (e.g. Samsung Internet).
+  const renderedContainer = document.getElementById("google-signin-rendered");
+  if (renderedContainer) {
+    google.accounts.id.renderButton(renderedContainer, {
+      type: "standard",
+      theme: "filled_blue",
+      size: "medium",
+      text: "signin",
+      shape: "rectangular",
+      width: 120,
+    });
+  }
+
+  const customSignInBtn = document.getElementById("google-signin-btn");
+  customSignInBtn.addEventListener("click", () => {
+    google.accounts.id.prompt((notification) => {
+      // If One Tap is not supported or was dismissed, show the rendered Google button
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        if (renderedContainer) {
+          customSignInBtn.style.display = "none";
+          renderedContainer.style.display = "block";
+        }
+      }
+    });
   });
 
   // Restore session from localStorage if the token is still valid
@@ -513,6 +536,11 @@ function signOut() {
   localStorage.removeItem("google_credential");
   signedInEl.classList.add("hidden");
   signedOutEl.classList.remove("hidden");
+  // Restore custom sign-in button (may have been replaced by rendered Google button)
+  const customBtn = document.getElementById("google-signin-btn");
+  const renderedContainer = document.getElementById("google-signin-rendered");
+  if (customBtn) customBtn.style.display = "";
+  if (renderedContainer) renderedContainer.style.display = "none";
   updateCreateButton();
   updateMySearchesButton();
   if (typeof google !== "undefined" && google.accounts) {
@@ -624,8 +652,22 @@ async function loadSearches() {
         </div>
         ${search.description ? `<p class="card-description">${escapeHtml(search.description)}</p>` : ""}
         <div class="card-meta mt-1">${formatDate(search.created_at)}</div>
+        ${isOwned ? `<div class="card-actions">
+          <button class="btn-join" data-action="join">${escapeHtml(t("joinSearchCard"))}</button>
+          <button class="btn-dashboard" data-action="dashboard">${escapeHtml(t("openDashboard"))}</button>
+        </div>` : ""}
       `;
-      card.addEventListener("click", () => {
+      card.addEventListener("click", (e) => {
+        const actionBtn = e.target.closest("[data-action]");
+        if (actionBtn) {
+          e.stopPropagation();
+          if (actionBtn.dataset.action === "join") {
+            openSearch(search.id);
+          } else if (actionBtn.dataset.action === "dashboard") {
+            openDashboard(search.id);
+          }
+          return;
+        }
         if (isOwned) {
           openDashboard(search.id);
         } else {
@@ -1326,8 +1368,14 @@ function openCreateSearch() {
     // User is not signed in – trigger Google sign-in prompt
     if (typeof google !== "undefined" && google.accounts && GOOGLE_CLIENT_ID) {
       google.accounts.id.prompt((notification) => {
-        // If the prompt was dismissed or skipped, scroll to the sign-in button
+        // If the prompt was dismissed or skipped, show rendered button fallback
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          const customBtn = document.getElementById("google-signin-btn");
+          const renderedContainer = document.getElementById("google-signin-rendered");
+          if (renderedContainer) {
+            customBtn.style.display = "none";
+            renderedContainer.style.display = "block";
+          }
           highlightSignIn();
         }
       });
