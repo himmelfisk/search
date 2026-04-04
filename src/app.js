@@ -1128,9 +1128,11 @@ function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, ping
       .addTo(dashboardMap);
 
     // Track user interactions to avoid overriding manual zoom/pan
+    let saveStateTimer = null;
     dashboardMap.on("zoomend moveend", () => {
       dashboardMapUserInteracted = true;
-      saveDashboardMapState();
+      clearTimeout(saveStateTimer);
+      saveStateTimer = setTimeout(saveDashboardMapState, 300);
     });
   }
 
