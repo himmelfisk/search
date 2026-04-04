@@ -65,6 +65,7 @@ let lastKnownPosition = null; // for observation pings
 let dashboardMap = null;
 let dashboardLayers = [];
 let dashboardRefreshTimer = null;
+let dashboardLoadInFlight = false; // guard against overlapping dashboard requests
 let ownedSearches = [];
 let currentDashboardSearchId = null;
 let currentDashboardSearch = null; // current search object from dashboard data
@@ -988,15 +989,24 @@ function stopDashboardRefresh() {
     clearInterval(dashboardRefreshTimer);
     dashboardRefreshTimer = null;
   }
+  dashboardLoadInFlight = false;
 }
 
 async function loadDashboardData(searchId) {
+  if (dashboardLoadInFlight) return; // skip if a previous request is still pending
+  dashboardLoadInFlight = true;
   try {
     const data = await apiGetAuth(`/api/searches/${searchId}/dashboard`);
     renderDashboard(data);
   } catch (err) {
+    // Stop polling on auth / ownership errors – no point retrying automatically
+    if (err.status === 401 || err.status === 403) {
+      stopDashboardRefresh();
+    }
     document.getElementById("dashboard-title").textContent = t("errorLoadingDashboard");
     document.getElementById("dashboard-meta").textContent = err.message;
+  } finally {
+    dashboardLoadInFlight = false;
   }
 }
 
