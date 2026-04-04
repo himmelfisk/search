@@ -1052,15 +1052,17 @@ function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, ping
   let colorIdx = 0;
 
   // Convert coverage radius in meters to pixel weight at current zoom.
-  // We use a simplified approach: at zoom 15, ~1 pixel ≈ 4.7m at lat 60.
+  // 156543.03392 = Earth's equatorial circumference (m) / 256 pixels (tile size at zoom 0).
+  // We use lat ~59.91 (Oslo area) for the cosine correction.
   // The line weight represents the diameter (2 * radius).
-  // We clamp to reasonable min/max for visibility.
+  const MIN_LINE_WEIGHT = 4;
+  const MAX_LINE_WEIGHT = 200;
+
   function getLineWeight() {
     const zoom = dashboardMap.getZoom();
-    // meters per pixel at this zoom level (at equator, roughly)
     const metersPerPixel = 156543.03392 * Math.cos((59.91 * Math.PI) / 180) / Math.pow(2, zoom);
     const diameterPixels = (coverageRadius * 2) / metersPerPixel;
-    return Math.max(4, Math.min(diameterPixels, 200));
+    return Math.max(MIN_LINE_WEIGHT, Math.min(diameterPixels, MAX_LINE_WEIGHT));
   }
 
   const lineWeight = getLineWeight();
