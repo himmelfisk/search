@@ -136,6 +136,42 @@ searchRoutes.post("/", requireAuth(), async (c) => {
 });
 
 /**
+ * PUT /:id - Update a search operation (owner only)
+ * Body: { coverage_radius? }
+ */
+searchRoutes.put("/:id", requireAuth(), async (c) => {
+  const db = c.env.DB;
+  const user = c.get("user");
+  const id = c.req.param("id");
+
+  const search = await db
+    .prepare("SELECT * FROM search_operations WHERE id = ?")
+    .bind(id)
+    .first();
+
+  if (!search) {
+    return c.json({ error: "Search not found" }, 404);
+  }
+
+  if (search.owner_google_id !== user.googleId) {
+    return c.json({ error: "Not the owner of this search" }, 403);
+  }
+
+  const body = await c.req.json();
+
+  const coverageRadius = body.coverage_radius != null
+    ? Math.max(1, Math.min(500, parseInt(body.coverage_radius, 10) || 10))
+    : search.coverage_radius;
+
+  await db
+    .prepare("UPDATE search_operations SET coverage_radius = ? WHERE id = ?")
+    .bind(coverageRadius, id)
+    .run();
+
+  return c.json({ id, coverage_radius: coverageRadius });
+});
+
+/**
  * GET / - List active search operations (public)
  */
 searchRoutes.get("/", async (c) => {

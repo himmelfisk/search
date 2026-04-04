@@ -130,7 +130,10 @@
           <select id="dashboard-select" class="dashboard-select"></select>
         </div>
 
-        <h2 id="dashboard-title" class="card-title text-lg mb-1"></h2>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <h2 id="dashboard-title" class="card-title text-lg mb-1" style="margin-bottom:0;"></h2>
+          <button class="btn-small" id="dashboard-edit-btn" style="font-size:0.75rem;padding:0.15rem 0.5rem;" title="Edit Search">✏️</button>
+        </div>
         <div id="dashboard-meta" class="card-meta mb-2"></div>
 
         <!-- Stats bar -->
@@ -183,6 +186,21 @@
         <div class="modal-actions">
           <button class="btn btn-secondary" id="create-cancel-btn">Cancel</button>
           <button class="btn btn-primary" id="create-submit-btn" style="width:auto;">Create</button>
+        </div>
+      </div>
+    </div>
+    <!-- Edit Search Modal -->
+    <div id="edit-search-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <h2 class="modal-title">Edit Search</h2>
+        <div class="form-group">
+          <label for="edit-coverage">Coverage radius (m)</label>
+          <input type="number" id="edit-coverage" min="1" max="500" value="10" placeholder="10" />
+        </div>
+        <div id="edit-error" class="status-bar error hidden" style="font-size:0.8rem;"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="edit-cancel-btn">Cancel</button>
+          <button class="btn btn-primary" id="edit-submit-btn" style="width:auto;">Save</button>
         </div>
       </div>
     </div>
