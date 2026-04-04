@@ -59,6 +59,7 @@ let currentView = "home";
 let currentSearch = null;
 let watchId = null;
 let activeSearchId = null;
+let lastKnownPosition = null; // for observation pings
 
 // Owner dashboard state
 let dashboardMap = null;
@@ -207,10 +208,18 @@ function applyTranslations() {
   if (descLabel) descLabel.textContent = t("descriptionOptional");
   const descInput = document.getElementById("create-description");
   if (descInput) descInput.placeholder = t("descriptionPlaceholder");
+  const coverageLabel = document.querySelector('label[for="create-coverage"]');
+  if (coverageLabel) coverageLabel.textContent = t("coverageRadius");
+  const coverageInput = document.getElementById("create-coverage");
+  if (coverageInput) coverageInput.placeholder = t("coverageRadiusPlaceholder");
   const cancelBtn = document.getElementById("create-cancel-btn");
   if (cancelBtn) cancelBtn.textContent = t("cancel");
   const submitBtn = document.getElementById("create-submit-btn");
   if (submitBtn && !submitBtn.disabled) submitBtn.textContent = t("create");
+
+  // Ping button
+  const pingBtn = document.getElementById("ping-btn");
+  if (pingBtn && !pingBtn.disabled) pingBtn.textContent = t("pingObservation");
 }
 
 // ---------------------------------------------------------------------------
@@ -713,6 +722,38 @@ document.getElementById("leave-btn").addEventListener("click", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Observation Ping
+// ---------------------------------------------------------------------------
+document.getElementById("ping-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("ping-btn");
+  if (!lastKnownPosition || !activeSearchId) {
+    alert(t("pingNoPosition"));
+    return;
+  }
+
+  btn.disabled = true;
+
+  try {
+    await apiPost("/api/gps/ping", {
+      search_id: activeSearchId,
+      device_uuid: deviceUUID,
+      latitude: lastKnownPosition.latitude,
+      longitude: lastKnownPosition.longitude,
+    });
+
+    btn.textContent = "✅ " + t("pingSent");
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = t("pingObservation");
+    }, 2000);
+  } catch {
+    btn.disabled = false;
+    btn.textContent = t("pingObservation");
+    alert(t("pingFailed"));
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GPS Tracking
 // ---------------------------------------------------------------------------
 async function startTracking(searchId) {
@@ -779,6 +820,9 @@ function handlePosition(position, searchId) {
   const { latitude, longitude, accuracy } = position.coords;
   const time = new Date(position.timestamp);
 
+  // Store for observation pings
+  lastKnownPosition = { latitude, longitude };
+
   // Update coordinate cards
   document.getElementById("track-lat").textContent = latitude.toFixed(6);
   document.getElementById("track-lng").textContent = longitude.toFixed(6);
@@ -826,6 +870,7 @@ function stopTracking() {
     Geolocation.clearWatch({ id: watchId });
     watchId = null;
   }
+  lastKnownPosition = null;
 }
 
 // ---------------------------------------------------------------------------
@@ -894,13 +939,13 @@ async function openDashboard(searchId) {
 
   await loadDashboardData(searchId);
 
-  // Auto-refresh every 15 seconds
+  // Auto-refresh every 5 seconds for near real-time updates
   stopDashboardRefresh();
   dashboardRefreshTimer = setInterval(() => {
     if (currentView === "dashboard" && currentDashboardSearchId) {
       loadDashboardData(currentDashboardSearchId);
     }
-  }, 15000);
+  }, 5000);
 }
 
 function stopDashboardRefresh() {
@@ -921,7 +966,7 @@ async function loadDashboardData(searchId) {
 }
 
 function renderDashboard(data) {
-  const { search, participants, tracks } = data;
+  const { search, participants, tracks, pings } = data;
 
   headerTitle.textContent = escapeHtml(search.title);
   document.getElementById("dashboard-title").textContent = search.title;
@@ -967,8 +1012,11 @@ function renderDashboard(data) {
   document.getElementById("stat-distance").textContent = formatDistance(totalDistance);
   document.getElementById("stat-points").textContent = tracks.length;
 
+  // Coverage radius from search settings (in meters)
+  const coverageRadius = search.coverage_radius || 10;
+
   // Render map
-  renderDashboardMap(tracksByDevice, participantMap);
+  renderDashboardMap(tracksByDevice, participantMap, coverageRadius, pings || []);
 
   // Render legend
   renderDashboardLegend(tracksByDevice, participantMap);
@@ -977,7 +1025,7 @@ function renderDashboard(data) {
   renderDashboardParticipants(participants, deviceDistances);
 }
 
-function renderDashboardMap(tracksByDevice, participantMap) {
+function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, pings) {
   const mapEl = document.getElementById("dashboard-map");
 
   if (!dashboardMap) {
@@ -1003,6 +1051,22 @@ function renderDashboardMap(tracksByDevice, participantMap) {
   const allBounds = [];
   let colorIdx = 0;
 
+  // Convert coverage radius in meters to pixel weight at current zoom.
+  // 156543.03392 = Earth's equatorial circumference (m) / 256 pixels (tile size at zoom 0).
+  // We use lat ~59.91 (Oslo area) for the cosine correction.
+  // The line weight represents the diameter (2 * radius).
+  const MIN_LINE_WEIGHT = 4;
+  const MAX_LINE_WEIGHT = 200;
+
+  function getLineWeight() {
+    const zoom = dashboardMap.getZoom();
+    const metersPerPixel = 156543.03392 * Math.cos((59.91 * Math.PI) / 180) / Math.pow(2, zoom);
+    const diameterPixels = (coverageRadius * 2) / metersPerPixel;
+    return Math.max(MIN_LINE_WEIGHT, Math.min(diameterPixels, MAX_LINE_WEIGHT));
+  }
+
+  const lineWeight = getLineWeight();
+
   Object.entries(tracksByDevice).forEach(([uuid, points]) => {
     if (points.length === 0) return;
 
@@ -1012,12 +1076,14 @@ function renderDashboardMap(tracksByDevice, participantMap) {
     const participant = participantMap[uuid];
     const name = (participant && participant.name) || t("anonymous");
 
-    // Draw polyline
+    // Draw polyline – yellow at 60% transparency to show "covered" area
     const latlngs = points.map((p) => [p.latitude, p.longitude]);
     const polyline = L.polyline(latlngs, {
-      color,
-      weight: 3,
-      opacity: 0.8,
+      color: "#facc15",
+      weight: lineWeight,
+      opacity: 0.6,
+      lineCap: "round",
+      lineJoin: "round",
     }).addTo(dashboardMap);
     dashboardLayers.push(polyline);
 
@@ -1037,6 +1103,30 @@ function renderDashboardMap(tracksByDevice, participantMap) {
     allBounds.push(...latlngs);
   });
 
+  // Render observation pings as red markers
+  if (pings && pings.length > 0) {
+    const pingIcon = L.divIcon({
+      className: "ping-marker",
+      html: '<div class="ping-marker-inner">📍</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    });
+
+    pings.forEach((ping) => {
+      const pingName = ping.participant_name || t("anonymous");
+      const pingMarker = L.marker([ping.latitude, ping.longitude], { icon: pingIcon }).addTo(dashboardMap);
+      pingMarker.bindPopup(
+        `<strong>${escapeHtml(t("observation"))}</strong><br/>` +
+        `${escapeHtml(pingName)}<br/>` +
+        `${ping.latitude.toFixed(6)}, ${ping.longitude.toFixed(6)}<br/>` +
+        `${formatDate(ping.recorded_at)}`
+      );
+      dashboardLayers.push(pingMarker);
+      allBounds.push([ping.latitude, ping.longitude]);
+    });
+  }
+
   // Fit bounds
   if (allBounds.length > 0) {
     dashboardMap.fitBounds(allBounds, { padding: [30, 30], maxZoom: 16 });
@@ -1044,6 +1134,17 @@ function renderDashboardMap(tracksByDevice, participantMap) {
 
   // Force Leaflet to recalculate size (needed when container was hidden)
   setTimeout(() => dashboardMap.invalidateSize(), 100);
+
+  // Update line weight when zoom changes
+  dashboardMap.off("zoomend.coverage");
+  dashboardMap.on("zoomend.coverage", () => {
+    const newWeight = getLineWeight();
+    dashboardLayers.forEach((layer) => {
+      if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+        layer.setStyle({ weight: newWeight });
+      }
+    });
+  });
 }
 
 function renderDashboardLegend(tracksByDevice, participantMap) {
@@ -1147,6 +1248,7 @@ function openCreateSearch() {
     modal.classList.remove("hidden");
     document.getElementById("create-title").value = "";
     document.getElementById("create-description").value = "";
+    document.getElementById("create-coverage").value = "10";
     document.getElementById("create-error").classList.add("hidden");
   }
 }
@@ -1159,6 +1261,8 @@ function closeCreateSearch() {
 async function submitCreateSearch() {
   const title = document.getElementById("create-title").value.trim();
   const description = document.getElementById("create-description").value.trim();
+  const coverageStr = document.getElementById("create-coverage").value.trim();
+  const coverageRadius = Math.max(1, Math.min(500, parseInt(coverageStr, 10) || 10));
   const errorEl = document.getElementById("create-error");
   const btn = document.getElementById("create-submit-btn");
 
@@ -1175,7 +1279,7 @@ async function submitCreateSearch() {
   try {
     await apiPost(
       "/api/searches",
-      { title, description: description || undefined },
+      { title, description: description || undefined, coverage_radius: coverageRadius },
       true
     );
     closeCreateSearch();

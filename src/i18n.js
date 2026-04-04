@@ -75,10 +75,19 @@ const translations = {
     titlePlaceholder: "f.eks. Savnet person – Nordmarka",
     descriptionOptional: "Beskrivelse (valgfritt)",
     descriptionPlaceholder: "Tilleggsdetaljer…",
+    coverageRadius: "Område dekket (m)",
+    coverageRadiusPlaceholder: "Radius i meter",
     titleRequired: "Tittel er påkrevd.",
     creating: "Oppretter…",
     mustBeSignedIn: "Du må være logget inn for å opprette søk.",
     failedToCreateSearch: (msg) => `Kunne ikke opprette søk: ${msg}`,
+
+    // -- Ping --
+    pingObservation: "📍 Ping observasjon",
+    pingSent: "Observasjon sendt!",
+    pingFailed: "Kunne ikke sende observasjon.",
+    pingNoPosition: "Ingen GPS-posisjon tilgjengelig ennå.",
+    observation: "Observasjon",
   },
 
   sv: {
@@ -142,10 +151,19 @@ const translations = {
     titlePlaceholder: "t.ex. Försvunnen person – Nordmarka",
     descriptionOptional: "Beskrivning (valfritt)",
     descriptionPlaceholder: "Ytterligare detaljer…",
+    coverageRadius: "Täckt område (m)",
+    coverageRadiusPlaceholder: "Radie i meter",
     titleRequired: "Titel krävs.",
     creating: "Skapar…",
     mustBeSignedIn: "Du måste vara inloggad för att skapa sökningar.",
     failedToCreateSearch: (msg) => `Kunde inte skapa sökning: ${msg}`,
+
+    // -- Ping --
+    pingObservation: "📍 Pinga observation",
+    pingSent: "Observation skickad!",
+    pingFailed: "Kunde inte skicka observation.",
+    pingNoPosition: "Ingen GPS-position tillgänglig ännu.",
+    observation: "Observation",
   },
 
   da: {
@@ -209,10 +227,19 @@ const translations = {
     titlePlaceholder: "f.eks. Savnet person – Nordmarka",
     descriptionOptional: "Beskrivelse (valgfrit)",
     descriptionPlaceholder: "Yderligere detaljer…",
+    coverageRadius: "Dækket område (m)",
+    coverageRadiusPlaceholder: "Radius i meter",
     titleRequired: "Titel er påkrævet.",
     creating: "Opretter…",
     mustBeSignedIn: "Du skal være logget ind for at oprette søgninger.",
     failedToCreateSearch: (msg) => `Kunne ikke oprette søgning: ${msg}`,
+
+    // -- Ping --
+    pingObservation: "📍 Ping observation",
+    pingSent: "Observation sendt!",
+    pingFailed: "Kunne ikke sende observation.",
+    pingNoPosition: "Ingen GPS-position tilgængelig endnu.",
+    observation: "Observation",
   },
 
   en: {
@@ -276,10 +303,19 @@ const translations = {
     titlePlaceholder: "e.g. Missing person – Nordmarka",
     descriptionOptional: "Description (optional)",
     descriptionPlaceholder: "Additional details…",
+    coverageRadius: "Coverage radius (m)",
+    coverageRadiusPlaceholder: "Radius in meters",
     titleRequired: "Title is required.",
     creating: "Creating…",
     mustBeSignedIn: "You must be signed in to create searches.",
     failedToCreateSearch: (msg) => `Failed to create search: ${msg}`,
+
+    // -- Ping --
+    pingObservation: "📍 Ping Observation",
+    pingSent: "Observation sent!",
+    pingFailed: "Failed to send observation.",
+    pingNoPosition: "No GPS position available yet.",
+    observation: "Observation",
   },
 };
 
