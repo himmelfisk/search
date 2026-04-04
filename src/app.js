@@ -69,6 +69,7 @@ let dashboardLoadInFlight = false; // guard against overlapping dashboard reques
 let ownedSearches = [];
 let currentDashboardSearchId = null;
 let currentDashboardSearch = null; // current search object from dashboard data
+let dashboardMapUserInteracted = false; // true once user pans/zooms the map
 
 const headerTitle = document.getElementById("header-title");
 const headerBack = document.getElementById("header-back");
@@ -956,6 +957,19 @@ async function openDashboard(searchId) {
   headerTitle.textContent = t("dashboard");
   currentDashboardSearchId = searchId;
 
+  // Reset interaction flag so fitBounds runs on first load for this search
+  // (loadDashboardMapState inside renderDashboardMap will re-enable it if saved state exists)
+  dashboardMapUserInteracted = false;
+
+  // Restore saved view for this search if the map already exists
+  if (dashboardMap) {
+    const saved = loadDashboardMapState();
+    if (saved) {
+      dashboardMap.setView([saved.lat, saved.lng], saved.zoom);
+      dashboardMapUserInteracted = true;
+    }
+  }
+
   // Show switcher if multiple owned searches
   const switcherEl = document.getElementById("dashboard-switcher");
   const selectEl = document.getElementById("dashboard-select");
@@ -1072,14 +1086,37 @@ function renderDashboard(data) {
   renderDashboardParticipants(participants, deviceDistances);
 }
 
+function saveDashboardMapState() {
+  if (!dashboardMap || !currentDashboardSearchId) return;
+  const center = dashboardMap.getCenter();
+  sessionStorage.setItem(
+    `map_state_${currentDashboardSearchId}`,
+    JSON.stringify({ lat: center.lat, lng: center.lng, zoom: dashboardMap.getZoom() })
+  );
+}
+
+function loadDashboardMapState() {
+  if (!currentDashboardSearchId) return null;
+  try {
+    return JSON.parse(sessionStorage.getItem(`map_state_${currentDashboardSearchId}`));
+  } catch {
+    return null;
+  }
+}
+
 function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, pings) {
   const mapEl = document.getElementById("dashboard-map");
 
   if (!dashboardMap) {
+    const saved = loadDashboardMapState();
+    const initCenter = saved ? [saved.lat, saved.lng] : [59.91, 10.75];
+    const initZoom = saved ? saved.zoom : 13;
+    if (saved) dashboardMapUserInteracted = true;
+
     dashboardMap = L.map(mapEl, {
       zoomControl: true,
       attributionControl: false,
-    }).setView([59.91, 10.75], 13);
+    }).setView(initCenter, initZoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -1089,6 +1126,14 @@ function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, ping
     L.control.attribution({ prefix: false, position: "bottomright" })
       .addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a>')
       .addTo(dashboardMap);
+
+    // Track user interactions to avoid overriding manual zoom/pan
+    let saveStateTimer = null;
+    dashboardMap.on("zoomend moveend", () => {
+      dashboardMapUserInteracted = true;
+      clearTimeout(saveStateTimer);
+      saveStateTimer = setTimeout(saveDashboardMapState, 300);
+    });
   }
 
   // Clear existing layers
@@ -1100,14 +1145,15 @@ function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, ping
 
   // Convert coverage radius in meters to pixel weight at current zoom.
   // 156543.03392 = Earth's equatorial circumference (m) / 256 pixels (tile size at zoom 0).
-  // We use lat ~59.91 (Oslo area) for the cosine correction.
+  // We use the map center latitude for the cosine correction.
   // The line weight represents the diameter (2 * radius).
   const MIN_LINE_WEIGHT = 4;
   const MAX_LINE_WEIGHT = 200;
 
   function getLineWeight() {
     const zoom = dashboardMap.getZoom();
-    const metersPerPixel = 156543.03392 * Math.cos((59.91 * Math.PI) / 180) / Math.pow(2, zoom);
+    const lat = dashboardMap.getCenter().lat;
+    const metersPerPixel = 156543.03392 * Math.cos((lat * Math.PI) / 180) / Math.pow(2, zoom);
     const diameterPixels = (coverageRadius * 2) / metersPerPixel;
     return Math.max(MIN_LINE_WEIGHT, Math.min(diameterPixels, MAX_LINE_WEIGHT));
   }
@@ -1174,8 +1220,8 @@ function renderDashboardMap(tracksByDevice, participantMap, coverageRadius, ping
     });
   }
 
-  // Fit bounds
-  if (allBounds.length > 0) {
+  // Fit bounds only on initial load; preserve user's zoom/pan on refreshes
+  if (allBounds.length > 0 && !dashboardMapUserInteracted) {
     dashboardMap.fitBounds(allBounds, { padding: [30, 30], maxZoom: 16 });
   }
 
