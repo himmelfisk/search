@@ -446,9 +446,12 @@ async function initGoogleSignIn() {
     callback: handleGoogleCredential,
   });
 
-  // Render a Google-branded sign-in button as a fallback for browsers
-  // where One Tap (prompt) is not supported (e.g. Samsung Internet).
+  // Render the Google-branded sign-in button and show it immediately.
+  // The custom "Logg inn" button is only a placeholder while GIS loads;
+  // once the rendered button is ready we swap so users always see the
+  // same button and never experience a jarring mid-click transformation.
   const renderedContainer = document.getElementById("google-signin-rendered");
+  const customSignInBtn = document.getElementById("google-signin-btn");
   if (renderedContainer) {
     google.accounts.id.renderButton(renderedContainer, {
       type: "standard",
@@ -458,20 +461,10 @@ async function initGoogleSignIn() {
       shape: "rectangular",
       width: 120,
     });
+    // Swap: show Google button, hide custom placeholder
+    renderedContainer.style.display = "block";
+    if (customSignInBtn) customSignInBtn.style.display = "none";
   }
-
-  const customSignInBtn = document.getElementById("google-signin-btn");
-  customSignInBtn.addEventListener("click", () => {
-    google.accounts.id.prompt((notification) => {
-      // If One Tap is not supported or was dismissed, show the rendered Google button
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        if (renderedContainer) {
-          customSignInBtn.style.display = "none";
-          renderedContainer.style.display = "block";
-        }
-      }
-    });
-  });
 
   // Restore session from localStorage if the token is still valid
   const stored = localStorage.getItem("google_credential");
@@ -536,11 +529,11 @@ function signOut() {
   localStorage.removeItem("google_credential");
   signedInEl.classList.add("hidden");
   signedOutEl.classList.remove("hidden");
-  // Restore custom sign-in button (may have been replaced by rendered Google button)
+  // Restore sign-in buttons: keep Google rendered button visible
   const customBtn = document.getElementById("google-signin-btn");
   const renderedContainer = document.getElementById("google-signin-rendered");
-  if (customBtn) customBtn.style.display = "";
-  if (renderedContainer) renderedContainer.style.display = "none";
+  if (customBtn) customBtn.style.display = "none";
+  if (renderedContainer) renderedContainer.style.display = "block";
   updateCreateButton();
   updateMySearchesButton();
   if (typeof google !== "undefined" && google.accounts) {
@@ -1365,17 +1358,10 @@ function highlightSignIn() {
 
 function openCreateSearch() {
   if (!googleCredential) {
-    // User is not signed in – trigger Google sign-in prompt
+    // User is not signed in – try One Tap, highlight the sign-in area
     if (typeof google !== "undefined" && google.accounts && GOOGLE_CLIENT_ID) {
       google.accounts.id.prompt((notification) => {
-        // If the prompt was dismissed or skipped, show rendered button fallback
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          const customBtn = document.getElementById("google-signin-btn");
-          const renderedContainer = document.getElementById("google-signin-rendered");
-          if (renderedContainer) {
-            customBtn.style.display = "none";
-            renderedContainer.style.display = "block";
-          }
           highlightSignIn();
         }
       });
